@@ -134,7 +134,33 @@ a.
 
 La función de mutación del triángulo implicará recorrer cada uno de los parámetros del triángulo y con probabilidad intra_gene_Pm se mutará cada uno individualmente de la siguiente manera: 
 
-- b. - Para las posiciones x e y de cada esquina del polígono se calculará un delta como random [-max_coord delta, max_coord delta]. No hay wraparound, es decir que si el resultado se escapa de las coordenadas de la imagen se debe mantener dentro de la misma (considerando un overflow seteado en la configuración: si coordenada+delta < -max_coord entonces la nueva coordenada es -max_coord_delta, si coordenada+delta > x+max_coord_delta o y+max_coord_delta entonces la nueva coordenada es x+max_coord_delta o y+max_coord_delta. Nunca se escapan del canvas de la imagen. 
+- b. - Para las posiciones x e y de cada esquina del polígono se calculará un delta
+como random [-max_coord_delta, max_coord_delta]. No hay wraparound: si el
+resultado se escapa del dominio válido, la coordenada se recorta al extremo
+del dominio en lugar de dar la vuelta.
+
+El dominio válido es el canvas ampliado por max_coord_overflow en los cuatro
+lados:
+
+    x ∈ [-max_coord_overflow, ancho + max_coord_overflow]
+    y ∈ [-max_coord_overflow, alto  + max_coord_overflow]
+
+Concretamente, para x:
+
+    si x + delta < -max_coord_overflow
+        la nueva x es -max_coord_overflow
+    si x + delta > ancho + max_coord_overflow
+        la nueva x es ancho + max_coord_overflow
+    en cualquier otro caso
+        la nueva x es x + delta
+
+Para y vale lo mismo, reemplazando ancho por alto.
+
+Se permite ese margen de overflow para que una figura pueda quedar
+parcialmente fuera del canvas y así cubrir un borde con un solo vértice
+adentro, en vez de estar obligada a tener todos sus vértices dentro de la
+imagen. max_coord_delta controla cuánto se mueve un vértice por mutación;
+max_coord_overflow controla hasta dónde puede llegar. Son independientes. 
 
 - Para los valores de RGBA se tomará el mismo comportamiento con el valor nuevo = valor original + rand[-max_color_delta, max_color_delta], nuevamente sin underflow ni overflow, el valor siempre debe permanecer entre 0 y 255. 
 
