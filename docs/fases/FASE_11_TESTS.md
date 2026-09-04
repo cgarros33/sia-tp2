@@ -19,6 +19,7 @@ se rompió.
 | Archivo | Qué cubre |
 |---|---|
 | `tests/__init__.py` | Vacío |
+| `tests/verificacion_fase01.py` | Ya existe: el script suelto con el que se verificó la fase 01 |
 | `tests/test_config.py` | Fase 00 |
 | `tests/test_figuras.py` | Fase 01 |
 | `tests/test_renderizador.py` | Fase 02, el renderizador |
@@ -51,6 +52,15 @@ que traducir esas tablas.
 Además, cada documento tiene una sección "Errores probables". Los errores más
 graves de esa lista merecen una prueba que los detecte explícitamente, aunque la
 tabla de verificación no los cubra fila por fila.
+
+**Hay trabajo ya hecho.** En `tests/verificacion_fase01.py` está el script suelto
+con el que se verificó la fase 01: cubre sus doce comprobaciones más cinco extra
+de dibujado, e imprime una línea por verificación. No está escrito con el módulo
+de pruebas de la biblioteca estándar y se agrega la raíz del repositorio al
+camino de importación con una ruta absoluta, así que solo corre en la máquina
+donde se escribió. Hay que convertirlo al formato de la suite y volver relativa
+esa ruta, pero las comprobaciones ya están pensadas y andando: conviene
+traducirlo antes que reescribirlo.
 
 ### Herramienta
 

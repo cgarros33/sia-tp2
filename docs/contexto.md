@@ -120,6 +120,15 @@ temperature: parámetro para la selección de Boltzmann
 
 random_seed: la semilla para ejecutar las funciones random 
 
+background_color: color RGBA del canvas sobre el que se dibujan las figuras.
+Como las figuras pueden ser translúcidas, el fondo entra directamente en el
+cálculo del fitness. El canvas se crea sin canal de transparencia, así que en la
+práctica se usan solo sus tres primeros componentes.
+
+max_generations: cantidad máxima de generaciones que corre el motor. Es uno de
+los tres criterios de corte, junto con fitness_cutoff y
+stale_content_generation_cutoff.
+
 Se definen a continuación los conceptos de gen, individuo y población para el trabajo: 
 
 # GEN: 
