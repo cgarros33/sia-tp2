@@ -53,14 +53,24 @@ lectura inicial del disco.
 **Comportamiento de `cargar_recursos`:**
 
 Devuelve un diccionario con lo que las figuras piden al dibujarse. Hoy contiene
-únicamente la imagen de overlay, y solo cuando `gene_type` es el de tipo PNG. Si
-esa imagen no existe cuando hace falta, corta. Se llama una sola vez por corrida:
-el punto del diccionario es que ninguna figura abra archivos.
+únicamente la imagen de overlay, bajo la clave `overlay`, y solo cuando
+`gene_type` es el de tipo PNG. Si esa imagen no existe cuando hace falta, corta.
+Se llama una sola vez por corrida: el punto del diccionario es que ninguna figura
+abra archivos.
+
+El nombre de la clave es un contrato con la fase 01: la figura PNG lo busca por
+ese nombre exacto.
 
 **Comportamiento de `renderizar`:**
 
 1. Crea un lienzo del ancho y el alto recibidos, pintado del color indicado en
-   `background_color`.
+   `background_color`. **El lienzo se crea sin canal de transparencia**, en modo
+   RGB, y por eso solo se usan los tres primeros componentes del color de fondo.
+   Es el único modo en el que la biblioteca de imágenes mezcla la transparencia
+   al dibujar: sobre un lienzo con canal alfa, el mismo llamado de dibujado pisa
+   el píxel en vez de componerlo, y las figuras translúcidas dejan de serlo sin
+   dar ningún error. Es coherente con que el lienzo sea opaco por construcción y
+   con que la comparación use tres canales.
 2. Recorre las figuras en el orden en que vienen en la lista y le pide a cada una
    que se dibuje sobre el lienzo, pasándole los recursos. El orden es información
    genética: la figura de la posición cero queda debajo de todas.
@@ -142,6 +152,8 @@ el tamaño original del archivo.
 | La comparación usa solo los tres canales de color | El lienzo es opaco por construcción, así que el canal de transparencia del fenotipo no aporta información |
 | El multiplicador de resolución se aplica al cargar y no al comparar | Si se aplicara al comparar, cada evaluación pagaría el costo de redimensionar. Aplicado al cargar se paga una sola vez por corrida |
 | El renderizador es el único que abre archivos de imagen | Evita que cada figura lea el disco al dibujarse |
+| El lienzo se crea sin canal de transparencia | Es el único modo en el que la biblioteca de imágenes compone la transparencia al dibujar en vez de pisar el píxel. Con canal alfa las figuras translúcidas dejarían de serlo, y sin ningún error de por medio |
+| La imagen de overlay va bajo la clave `overlay` | La figura PNG de la fase 01 la busca por ese nombre exacto |
 | El renderizador no compone capas del tamaño de la imagen | Una capa por figura implica una composición de imagen entera por gen, y el renderizado ya es la operación más cara del motor |
 
 ---
@@ -203,6 +215,12 @@ el tamaño original del archivo.
 - **Incluir el canal de transparencia en el error** → se suma una diferencia
   constante que no aporta nada y ensucia la escala de la aptitud → solo se
   comparan los tres canales de color.
+- **Crear el lienzo con canal de transparencia** → el dibujado deja de componer y
+  pasa a pisar el píxel, así que todas las figuras se ven opacas por más que su
+  canal alfa diga otra cosa. No da ningún error: simplemente el motor pierde la
+  translucidez, que es una de las cosas que la consigna pide → verificación 7.
+- **Usar una clave distinta a `overlay`** → la figura PNG no encuentra su imagen
+  y falla en la primera corrida con ese tipo de gen.
 
 ---
 

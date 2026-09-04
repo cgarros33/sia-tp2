@@ -22,6 +22,7 @@ escapa de su rango.
 |---|---|
 | `src/figuras/__init__.py` | Vacío |
 | `src/figuras/base.py` | Interfaz abstracta de figura |
+| `src/figuras/familias.py` | Las dos clases de familia: polígonos de N vértices y figuras elipsoidales |
 | `src/figuras/triangulo.py` | Polígono de 3 vértices con RGBA |
 | `src/figuras/cuadrilatero.py` | Polígono de 4 vértices con RGBA |
 | `src/figuras/pentagono.py` | Polígono de 5 vértices con RGBA |
@@ -39,15 +40,15 @@ resto del motor trabaje con figuras sin saber de qué tipo son.
 
 | Método | Recibe | Devuelve | Qué hace |
 |---|---|---|---|
-| `aleatoria` | Generador de azar, ancho y alto del lienzo, configuración | Una figura nueva | Crea una figura con todos sus parámetros muestreados al azar dentro del dominio válido. Es de clase, no de instancia |
+| `aleatoria` | Generador de azar, configuración, ancho y alto del lienzo | Una figura nueva | Crea una figura con todos sus parámetros muestreados al azar dentro del dominio válido. Es de clase, no de instancia |
 | `mutar` | Generador de azar, configuración, ancho y alto | Una figura nueva | Devuelve una figura con los parámetros mutados |
 | `copiar` | — | Una figura nueva | Devuelve una copia independiente |
 | `dibujar` | La superficie de destino y un diccionario de recursos | Nada | Pinta la figura sobre el destino, componiendo su color con lo que ya está dibujado |
 | `parametros` | — | Los valores de la figura, en orden fijo | Expone el genotipo de la figura |
 | `centro` | — | Un par de coordenadas | Devuelve el centro geométrico |
-| `con_color` | Tres componentes de color | Una figura nueva | Devuelve una copia con otro color, conservando geometría y transparencia |
+| `con_color` | Los tres componentes de color, como argumentos separados | Una figura nueva | Devuelve una copia con otro color, conservando geometría y transparencia |
 | `nombres_parametros` | — | Los nombres de los parámetros | Mismo orden que `parametros`. Es de clase |
-| `rangos` | Ancho y alto del lienzo, configuración | El mínimo y el máximo de cada parámetro | Mismo orden que `parametros`. Es de clase |
+| `rangos` | La configuración, el ancho y el alto del lienzo | El mínimo y el máximo de cada parámetro | Mismo orden que `parametros`. Es de clase |
 
 Cada método existe porque una fase posterior lo necesita:
 
@@ -66,8 +67,32 @@ Cada método existe porque una fase posterior lo necesita:
   llaman. Siempre devuelven una instancia nueva.
 - `parametros`, `nombres_parametros` y `rangos` devuelven secuencias del mismo
   largo y en el mismo orden.
+- Los métodos reciben siempre las mismas cosas en el mismo orden: primero el
+  generador de azar, después la configuración, después el ancho y el alto.
+  `rangos` sigue ese orden salteando el generador, que no usa.
 - Todas las implementaciones evitan el diccionario de instancia, según la
   consideración de rendimiento de `docs/contexto.md`.
+
+---
+
+### `src/figuras/familias.py`
+
+Las cinco figuras se agrupan en dos familias que comparten toda la lógica de
+creación al azar, mutación y recorte de dominio. Ese código vive acá una sola
+vez.
+
+| Clase | Qué agrupa | Qué define |
+|---|---|---|
+| La familia de polígonos | Triángulo, cuadrilátero y pentágono | Una cantidad variable de vértices más los cuatro canales de color, con el dominio y el recorte de los polígonos |
+| La familia elipsoidal | Óvalo e imagen PNG | Centro, dos radios, rotación y los cuatro canales de color |
+
+Los cinco archivos concretos quedan reducidos a declarar cuántos vértices tienen,
+o a definir su forma de dibujarse. Ninguno importa de otro archivo concreto: los
+cinco importan de acá, y este importa de la interfaz.
+
+Sin esto, la regla de mutación y recorte de los polígonos estaría escrita tres
+veces y la de la familia elipsoidal dos, y corregir un error en una dejaría las
+otras mal.
 
 ---
 
@@ -130,7 +155,7 @@ Nueve parámetros: centro, dos radios, rotación y los cuatro canales de color.
 | Coordenada horizontal del centro | De 0 al ancho | `max_coord_delta` |
 | Coordenada vertical del centro | De 0 al alto | `max_coord_delta` |
 | Los dos radios | De 1 a la mitad del lado mayor del lienzo | `max_radius_delta` |
-| Rotación | De 0 a 1 | `max_rotation_delta` |
+| Rotación | De 0 a 1, con envoltura | `max_rotation_delta` |
 | Los cuatro canales de color | Enteros de 0 a 255 | `max_color_delta` |
 
 El óvalo no usa `max_coord_overflow`: su centro se queda siempre dentro del
@@ -138,6 +163,18 @@ lienzo.
 
 La rotación está normalizada: 0 es sin rotar y 1 es una vuelta completa. Al
 dibujar se lleva a grados.
+
+**La rotación se envuelve, no se recorta.** Es el único parámetro que no sigue la
+regla del recorte estricto, y es porque es cíclico: 0.99 y 0.01 describen
+prácticamente la misma elipse, así que un valor que se pasa de un extremo tiene
+que volver a entrar por el otro. Recortarlo crearía dos paredes en las que la
+mutación se frena sin ningún motivo geométrico. El argumento que justifica el
+recorte en las coordenadas no aplica acá, porque ahí los dos extremos del rango
+sí son puntos lejanos entre sí.
+
+El período es una vuelta completa y no media vuelta, aunque una elipse rotada
+media vuelta sea idéntica a sí misma: la figura PNG comparte esta familia y una
+imagen rotada media vuelta no es la misma imagen.
 
 **Dibujado.** La biblioteca de imágenes no dibuja elipses rotadas directamente.
 La elipse se dibuja sin rotar en una capa auxiliar del tamaño de su caja
@@ -191,6 +228,11 @@ porque salen de la imagen objetivo y esa la carga la fase 10.
 | La mutación recibe el ancho y el alto explícitamente | El recorte de coordenadas depende del tamaño del lienzo, que no está en la configuración porque sale de la imagen objetivo |
 | La figura compone su propio color sobre el destino, sin capas del tamaño de la imagen | Una capa por figura implica una composición de la imagen completa por gen. Con cien genes, cien individuos y cientos de generaciones son millones de composiciones de imagen entera, y el renderizado ya es la operación más cara del motor |
 | El radio del óvalo se recorta entre 1 y la mitad del lado mayor | El mínimo evita radios nulos o negativos, que rompen el dibujado. El máximo es el radio que ya cubre el lienzo entero: más grande no aporta fenotipo nuevo |
+| La rotación se envuelve en lugar de recortarse | Es un parámetro cíclico: los dos extremos del rango describen la misma figura, así que recortar frenaría la mutación en dos puntos sin ningún motivo geométrico |
+| El período de la rotación es una vuelta completa | Una elipse rotada media vuelta es idéntica a sí misma, pero la figura PNG comparte la familia y una imagen rotada media vuelta no lo es |
+| La lógica compartida vive en un archivo de familias | En la interfaz mezclaría contrato con cuentas, y en un archivo concreto obligaría a que el cuadrilátero importe del triángulo |
+| El destino de dibujado llega en modo RGB, sin canal de transparencia | Es el único modo en el que la biblioteca de imágenes mezcla la transparencia al dibujar. Sobre un destino con canal alfa, el mismo llamado pisa el píxel en vez de componerlo, y las figuras translúcidas dejan de serlo sin dar ningún error |
+| La imagen de overlay llega en el diccionario de recursos bajo la clave `overlay` | El nombre tiene que coincidir con el que usa la fase 02 al armar el diccionario |
 
 ---
 
@@ -200,22 +242,25 @@ porque salen de la imagen objetivo y esa la carga la fase 10.
   rango, una parte de las figuras nace casi invisible y ocupa un locus sin
   aportar fenotipo. Se podría acotar el mínimo, pero conviene medirlo en la fase
   12 antes de tocarlo.
-- **Tinte del PNG.** Queda a criterio de quien implementa si el color tiñe la
-  imagen de overlay o si solo se usa el canal de transparencia. Se resuelve al
-  ver cómo queda el resultado.
+El tinte del PNG dejó de estar abierto: el color tiñe la imagen de overlay de
+forma multiplicativa, y el canal de transparencia de la figura multiplica al del
+PNG.
 
 ---
 
 ## 7. Checkpoints obligatorios
 
-- `src/figuras/triangulo.py` — porque define el esquema de mutación por delta y
-  el recorte de dominio que después repiten el cuadrilátero y el pentágono.
-- `src/figuras/ovalo.py` — porque tiene tres dominios que el triángulo no tiene
-  (radios, rotación normalizada, centro sin overflow) y una regla de recorte
-  propia.
+Los dos checkpoints corresponden a las dos clases de `src/figuras/familias.py`,
+que es donde vive la lógica que calcula:
 
-`cuadrilatero.py` y `pentagono.py` no llevan checkpoint: repiten el esquema ya
-aprobado en el triángulo con más vértices. `imagen_png.py` repite el del óvalo.
+- La familia de polígonos — porque define el esquema de mutación por delta y el
+  recorte de dominio.
+- La familia elipsoidal — porque tiene tres dominios que los polígonos no tienen
+  (radios, rotación cíclica, centro sin margen de desborde) y una regla de
+  recorte propia, con la rotación como excepción.
+
+Los cinco archivos concretos no llevan checkpoint: declaran su cantidad de
+vértices o su forma de dibujarse, sin cuentas propias.
 
 ---
 
@@ -225,12 +270,12 @@ aprobado en el triángulo con más vértices. `imagen_png.py` repite el del óva
 |---|---|---|---|
 | 1 | Dominio inicial | Diez mil triángulos al azar sobre un lienzo de 200 por 200 | Ningún parámetro fuera de su rango |
 | 2 | Recorte tras mutar | Un triángulo mutado diez mil veces seguidas | Ningún parámetro fuera de su rango, en particular ninguna coordenada más allá del margen de overflow |
-| 3 | Recorte extremo | Un triángulo con todas las coordenadas en el máximo, mutado con probabilidad interna 1 | Las coordenadas se quedan en el máximo y no dan la vuelta |
+| 3 | Recorte extremo | Un triángulo con todas las coordenadas en el extremo de su rango, mutado con probabilidad interna 1, muchas veces | Ninguna coordenada supera nunca el extremo. Las que se mueven lo hacen hacia adentro, nunca dan la vuelta al otro lado del rango |
 | 4 | La mutación no modifica el original | Leer los parámetros, mutar, volver a leer | La lectura original no cambió |
 | 5 | Independencia de la copia | Copiar y mutar la copia | El original no cambió |
 | 6 | Coherencia de las secuencias | Las cinco figuras | Los parámetros, sus nombres y sus rangos tienen el mismo largo |
 | 7 | Reproducibilidad | Dos generadores con la misma semilla, cien figuras cada uno | Las cien coinciden parámetro por parámetro |
-| 8 | Rotación normalizada | Un óvalo mutado diez mil veces | La rotación siempre entre 0 y 1 |
+| 8 | Rotación cíclica | Un óvalo mutado diez mil veces | La rotación siempre entre 0 y 1, y un valor cerca de 1 que recibe un delta positivo reaparece cerca de 0 |
 | 9 | Radios | Un óvalo mutado diez mil veces | Ningún radio menor a 1 |
 | 10 | Dibujado opaco | Un triángulo rojo opaco sobre un lienzo blanco de 100 por 100 | Hay píxeles rojos dentro del triángulo y blancos fuera |
 | 11 | Dibujado translúcido | Un triángulo rojo con la transparencia a la mitad sobre un lienzo blanco | Los píxeles de adentro quedan rosados, no rojos puros: el color se compuso con el fondo |
