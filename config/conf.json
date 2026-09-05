@@ -1,22 +1,24 @@
 {
   "gene_count": 100,
-  "file_input": "resources/lebron.png",
+  "file_input": "resources/bron500.png",
   "gene_type": "triangle",
-  "overlay_source": "resources/overlay.png",
-  "background_color": [255, 255, 255, 255],
-  "output_resolution_mult": 0.5,
-
+  "overlay_source": "resources/bron30.png",
+  "background_color": [
+    255,
+    255,
+    255,
+    255
+  ],
+  "output_resolution_mult": 1,
   "seleccion": "torneo_deterministico",
   "cruza": "dos_puntos",
   "mutacion": "multigen",
   "supervivencia": "aditiva",
-
   "population_size": 100,
   "selected_count": 100,
   "tournament_size": 5,
   "tournament_threshold": 0.75,
   "temperature": 1.0,
-
   "extra_gene_Pm": 0.15,
   "intra_gene_Pm": 0.2,
   "max_genes_to_mutate": 5,
@@ -25,7 +27,6 @@
   "max_rotation_delta": 0.05,
   "max_radius_delta": 10.0,
   "max_coord_overflow": 10.0,
-
   "max_generations": 1000,
   "fitness_cutoff": 0.99,
   "stale_content_generation_cutoff": 300,
