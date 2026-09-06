@@ -118,7 +118,7 @@ def ejecutar_motor(
             return
         if pool is not None:
             genotipos = [ind.genes for ind in sucios]
-            chunksize = max(1, len(genotipos) // (num_workers * 2))
+            chunksize = max(1, (len(genotipos) + num_workers - 1) // num_workers)
             fitnesses = pool.map(
                 _evaluar_genotipo_remoto, genotipos, chunksize=chunksize
             )

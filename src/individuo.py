@@ -10,7 +10,7 @@ class ErrorDeIndividuo(Exception):
 class Individuo:
     """Lista ordenada de gene_count figuras que sabe cachear su fitness."""
 
-    __slots__ = ("_genes", "_fitness", "_sucio")
+    __slots__ = ("_genes", "_fitness", "_sucio", "_vector_parametros")
 
     def __init__(self, genes):
         """Recibe la secuencia ordenada de figuras que forman el cromosoma."""
@@ -19,6 +19,7 @@ class Individuo:
             raise ErrorDeIndividuo("un individuo necesita al menos un gen")
         self._fitness = None
         self._sucio = True
+        self._vector_parametros = None
 
     @property
     def genes(self):
@@ -34,6 +35,7 @@ class Individuo:
         if gen.parametros() != self._genes[locus].parametros():
             self._sucio = True
             self._fitness = None
+            self._vector_parametros = None
         self._genes[locus] = gen
 
     def __len__(self):
@@ -58,15 +60,21 @@ class Individuo:
         return self._sucio
 
     def copiar(self):
-        """Devuelve un individuo con copias independientes de los genes y el mismo fitness."""
-        copia = Individuo([gen.copiar() for gen in self._genes])
+        """Devuelve un individuo con una copia de la lista de genes y el mismo fitness."""
+        copia = Individuo(self._genes)
         copia._fitness = self._fitness
         copia._sucio = self._sucio
+        copia._vector_parametros = self._vector_parametros
         return copia
 
     def vector_parametros(self):
         """Devuelve todos los parámetros de todos los genes concatenados en un vector."""
-        return np.concatenate([np.asarray(gen.parametros(), dtype=float) for gen in self._genes])
+        if self._vector_parametros is None:
+            lista = []
+            for gen in self._genes:
+                lista.extend(gen.parametros())
+            self._vector_parametros = np.asarray(lista, dtype=float)
+        return self._vector_parametros
 
     def nombres_parametros(self):
         """Devuelve los nombres del vector de parámetros, prefijados por el locus del gen."""

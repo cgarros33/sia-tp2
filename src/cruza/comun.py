@@ -26,9 +26,12 @@ def hijos_por_mascara(padre, madre, mascara):
     if mascara.all():
         return madre.copiar(), padre.copiar()
 
-    primero, segundo = [], []
-    for locus, intercambia in enumerate(mascara):
-        origen, alterno = (madre, padre) if intercambia else (padre, madre)
-        primero.append(origen.gen(locus).copiar())
-        segundo.append(alterno.gen(locus).copiar())
+    primero = [
+        madre.gen(locus) if intercambia else padre.gen(locus)
+        for locus, intercambia in enumerate(mascara)
+    ]
+    segundo = [
+        padre.gen(locus) if intercambia else madre.gen(locus)
+        for locus, intercambia in enumerate(mascara)
+    ]
     return Individuo(primero), Individuo(segundo)

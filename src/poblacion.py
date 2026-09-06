@@ -10,15 +10,20 @@ class ErrorDePoblacion(Exception):
 class Poblacion:
     """Conjunto de tamaño constante de individuos que conforman una generación."""
 
-    __slots__ = ("_individuos", "_rangos", "_generacion", "_fitness")
+    __slots__ = ("_individuos", "_rangos", "_generacion", "_fitness", "_anchos")
 
-    def __init__(self, individuos, rangos, generacion=0):
+    def __init__(self, individuos, rangos, generacion=0, anchos=None):
         """Recibe los individuos, los rangos válidos de un gen y el número de generación."""
         self._individuos = tuple(individuos)
         self._validar()
         self._rangos = tuple(rangos)
         self._generacion = generacion
         self._fitness = None
+        if anchos is None:
+            minimos, maximos = np.array(self._rangos).T
+            self._anchos = np.tile(maximos - minimos, len(self._individuos[0]))
+        else:
+            self._anchos = anchos
 
     @property
     def individuos(self):
@@ -84,12 +89,10 @@ class Poblacion:
 
     def diversidad(self):
         """Devuelve el desvío estándar promedio de los parámetros, normalizado por el rango de cada uno."""
-        minimos, maximos = np.array(self._rangos).T
-        anchos = np.tile(maximos - minimos, len(self._individuos[0]))
-        matriz = np.empty((len(self._individuos), len(anchos)), dtype=float)
-        for indice, individuo in enumerate(self._individuos):
-            matriz[indice] = [param for gen in individuo.genes for param in gen.parametros()]
-        return float(np.mean(matriz.std(axis=0) / anchos))
+        matriz = np.array(
+            [individuo.vector_parametros() for individuo in self._individuos]
+        )
+        return float(np.mean(matriz.std(axis=0) / self._anchos))
 
     def siguiente(self, individuos):
         """Devuelve la generación que sigue, con el mismo tamaño y los mismos rangos."""
@@ -98,7 +101,12 @@ class Poblacion:
                 f"la población tiene que mantener su tamaño: se esperaban "
                 f"{len(self._individuos)} individuos y llegaron {len(individuos)}"
             )
-        return Poblacion(individuos, self._rangos, self._generacion + 1)
+        return Poblacion(
+            individuos,
+            self._rangos,
+            self._generacion + 1,
+            anchos=self._anchos,
+        )
 
     def _validar(self):
         """Exige población no vacía, cromosomas del mismo largo y ningún individuo repetido por referencia."""
