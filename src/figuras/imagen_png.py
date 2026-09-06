@@ -13,7 +13,12 @@ class ImagenPng(FiguraElipsoidal):
     __slots__ = ()
 
     def dibujar(self, destino, recursos):
-        """Reescala el overlay, lo tiñe con el color de la figura, lo rota y lo compone sobre el destino."""
+        """Reescala el overlay, le aplica el filtro de color, lo rota y lo compone sobre el destino."""
         capa = recursos[CLAVE_OVERLAY].resize(self._caja(), Image.Resampling.BILINEAR)
-        tinte = Image.new("RGBA", capa.size, self._color)
-        self._componer(destino, ImageChops.multiply(capa, tinte))
+        solido = Image.new("RGB", capa.size, self._color[:3])
+        con_filtro = Image.blend(capa.convert("RGB"), solido, 0.45)
+        alfa_combinado = ImageChops.multiply(
+            capa.getchannel("A"), Image.new("L", capa.size, self._color[3])
+        )
+        con_filtro.putalpha(alfa_combinado)
+        self._componer(destino, con_filtro)

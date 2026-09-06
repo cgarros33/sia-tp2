@@ -37,6 +37,7 @@ CAMPOS = (
     "save_best",
     "best_resolution_multiplier",
     "gif_gen_interval",
+    "save_every_n_generations",
     "random_seed",
 )
 
@@ -70,6 +71,8 @@ ENTEROS_POSITIVOS = (
     "stale_content_generation_cutoff",
     "gif_gen_interval",
 )
+
+ENTEROS_NO_NEGATIVOS = ("save_every_n_generations",)
 
 PROBABILIDADES = (
     "uniform_crossover_P",
@@ -183,6 +186,13 @@ def _validar(config):
                 f"'{nombre}' tiene que ser mayor o igual a 1, es {config[nombre]}"
             )
 
+    for nombre in ENTEROS_NO_NEGATIVOS:
+        _exigir_entero(config, nombre)
+        if config[nombre] < 0:
+            raise ErrorDeConfiguracion(
+                f"'{nombre}' tiene que ser mayor o igual a 0, es {config[nombre]}"
+            )
+
     if config["selected_count"] % 2 != 0:
         raise ErrorDeConfiguracion(
             f"'selected_count' tiene que ser par porque los padres se cruzan de "
@@ -246,7 +256,18 @@ def _validar(config):
             f"{config['save_best']!r}"
         )
 
-    _exigir_entero(config, "random_seed")
+    if isinstance(config["random_seed"], str):
+        try:
+            config["random_seed"] = int(config["random_seed"])
+        except ValueError:
+            import hashlib
+
+            config["random_seed"] = int.from_bytes(
+                hashlib.sha256(config["random_seed"].encode("utf-8")).digest()[:4],
+                "big",
+            )
+    else:
+        _exigir_entero(config, "random_seed")
 
 
 def _validar_campos_presentes(config):

@@ -4,11 +4,18 @@ import sys
 import time
 from pathlib import Path
 
+from PIL import Image
+
 from src.cli import ErrorDeArgumentos, parsear_args
 from src.config import ErrorDeConfiguracion, cargar_config
 from src.motor import ejecutar_motor
 from src.output import guardar_salidas
-from src.renderizador import ErrorDeImagen
+from src.renderizador import (
+    ErrorDeImagen,
+    cargar_objetivo,
+    cargar_recursos,
+    renderizar,
+)
 
 
 def main():
@@ -25,6 +32,19 @@ def main():
     max_gen = config["max_generations"]
     stale_max = config["stale_content_generation_cutoff"]
     epsilon = config["stale_content_epsilon"]
+    intervalo_guardado = config["save_every_n_generations"]
+    nombre_base = Path(config["file_input"]).stem
+    dir_img = Path(img_path)
+
+    try:
+        objetivo, ancho, alto = cargar_objetivo(config)
+        recursos = cargar_recursos(config)
+    except ErrorDeImagen as error:
+        print(f"Error de imagen: {error}", file=sys.stderr)
+        sys.exit(1)
+
+    if intervalo_guardado > 0:
+        dir_img.mkdir(parents=True, exist_ok=True)
 
     estado = {
         "anterior": None,
@@ -70,15 +90,20 @@ def main():
         sys.stdout.write(linea)
         sys.stdout.flush()
 
-    try:
-        registro, mejor = ejecutar_motor(
-            config,
-            save_all=save_all,
-            callback_generacion=callback_progreso,
-        )
-    except ErrorDeImagen as error:
-        print(f"\nError de imagen: {error}", file=sys.stderr)
-        sys.exit(1)
+        if intervalo_guardado > 0 and gen % intervalo_guardado == 0:
+            ind = registro.mejor_historico or poblacion.mejor()
+            matriz = renderizar(ind.genes, ancho, alto, config, recursos)
+            Image.fromarray(matriz).save(dir_img / f"current_{nombre_base}.png")
+
+    registro, mejor = ejecutar_motor(
+        config,
+        save_all=save_all,
+        callback_generacion=callback_progreso,
+        objetivo=objetivo,
+        ancho=ancho,
+        alto=alto,
+        recursos=recursos,
+    )
 
     sys.stdout.write("\n")
     sys.stdout.flush()
@@ -88,7 +113,6 @@ def main():
         if registro.tiempo_total > 0
         else 0.0
     )
-    nombre_base = Path(config["file_input"]).stem
 
     print("------------------------------------------------------------")
     print("Simulación finalizada.")
@@ -99,7 +123,7 @@ def main():
     print("------------------------------------------------------------")
     print("Guardando archivos de salida...")
 
-    guardar_salidas(registro, config, result_path, img_path)
+    guardar_salidas(registro, config, result_path, img_path, recursos=recursos)
 
     print(f"Resultados guardados:")
     print(f"  - {result_path}/metricas.csv")
@@ -110,6 +134,8 @@ def main():
     print(f"  - {img_path}/{nombre_base}.gif")
     if config["save_best"]:
         print(f"  - {img_path}/best_{nombre_base}.png")
+    if config["save_every_n_generations"] > 0:
+        print(f"  - {img_path}/current_{nombre_base}.png")
     print("------------------------------------------------------------")
 
 

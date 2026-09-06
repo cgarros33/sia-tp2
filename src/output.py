@@ -126,17 +126,22 @@ def _guardar_gif_evolucion(registro, config, recursos, ancho, alto, path_archivo
                 frames.append(Image.fromarray(matriz))
 
     if frames:
+        if len(frames) == 1:
+            frames.append(frames[0].copy())
         frames[0].save(
             path_archivo,
             save_all=True,
             append_images=frames[1:],
-            duration=100,
+            duration=150,
             loop=0,
         )
 
 
 def _guardar_mejor_png(mejor_individuo, config, recursos, ancho, alto, path_archivo):
     """Renderiza el mejor individuo histórico escalado por el multiplicador vectorial y lo guarda en PNG."""
+    if mejor_individuo is None:
+        return
+
     multiplicador = config["best_resolution_multiplier"]
     if multiplicador == 1.0:
         matriz = renderizar(mejor_individuo.genes, ancho, alto, config, recursos)

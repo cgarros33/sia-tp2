@@ -78,21 +78,21 @@ def ejecutar_motor(
     registro = RegistroCorrida(config, save_all=save_all)
     registro.iniciar()
 
-    poblacion = inicializar_poblacion(config, objetivo, ancho, alto, azar)
-    poblacion.evaluar(evaluador)
-
     mejor_fitness_historico = None
     generaciones_sin_mejora = 0
+    t_gen_inicio = time.perf_counter()
 
     try:
+        poblacion = inicializar_poblacion(config, objetivo, ancho, alto, azar)
+        poblacion.evaluar(evaluador)
+        t_generacion = time.perf_counter() - t_gen_inicio
+
         while True:
-            t_inicio = time.perf_counter()
             fit_max = poblacion.fitness_maximo
             fit_min = poblacion.fitness_minimo
             fit_prom = poblacion.fitness_promedio
             diversidad = poblacion.diversidad()
             mejor = poblacion.mejor()
-            t_generacion = time.perf_counter() - t_inicio
 
             registro.registrar_generacion(
                 poblacion.generacion,
@@ -127,6 +127,8 @@ def ejecutar_motor(
                 registro.finalizar("max_generations")
                 break
 
+            t_gen_inicio = time.perf_counter()
+
             padres = list(
                 seleccionar(poblacion.individuos, config["selected_count"], azar, config)
             )
@@ -153,6 +155,7 @@ def ejecutar_motor(
 
             poblacion = poblacion.siguiente(sobrevivientes)
             poblacion.evaluar(evaluador)
+            t_generacion = time.perf_counter() - t_gen_inicio
     except KeyboardInterrupt:
         registro.finalizar("interrupcion_usuario")
 
