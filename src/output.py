@@ -9,7 +9,9 @@ from src.figuras.familias import FiguraElipsoidal, Poligono
 from src.renderizador import cargar_objetivo, cargar_recursos, renderizar
 
 
-def guardar_salidas(registro, config, result_path, img_path, recursos=None):
+def guardar_salidas(
+    registro, config, result_path, img_path, recursos=None, callback_progreso=None
+):
     """Guarda los archivos CSV, el resumen de texto, el GIF evolutivo y la mejor imagen renderizada."""
     dir_results = Path(result_path)
     dir_img = Path(img_path)
@@ -28,7 +30,13 @@ def guardar_salidas(registro, config, result_path, img_path, recursos=None):
     _guardar_resumen_txt(registro, config, dir_results / "resumen.txt")
 
     _guardar_gif_evolucion(
-        registro, config, recursos, ancho, alto, dir_img / f"{nombre_base}.gif"
+        registro,
+        config,
+        recursos,
+        ancho,
+        alto,
+        dir_img / f"{nombre_base}.gif",
+        callback_progreso=callback_progreso,
     )
 
     if config["save_best"] and registro.mejor_historico is not None:
@@ -108,22 +116,31 @@ def _guardar_resumen_txt(registro, config, path_archivo):
     path_archivo.write_text("\n".join(lineas) + "\n", encoding="utf-8")
 
 
-def _guardar_gif_evolucion(registro, config, recursos, ancho, alto, path_archivo):
+def _guardar_gif_evolucion(
+    registro, config, recursos, ancho, alto, path_archivo, callback_progreso=None
+):
     """Renderiza los mejores individuos según el intervalo configurado y genera el GIF animado."""
     if not registro.historial:
         return
 
     intervalo = config["gif_gen_interval"]
     ultimo_indice = len(registro.historial) - 1
+    gens_seleccionadas = [
+        gen
+        for indice, gen in enumerate(registro.historial)
+        if (gen.generacion % intervalo == 0 or indice == ultimo_indice)
+        and gen.mejor_individuo is not None
+    ]
+    total_frames = len(gens_seleccionadas)
     frames = []
 
-    for indice, gen in enumerate(registro.historial):
-        if gen.generacion % intervalo == 0 or indice == ultimo_indice:
-            if gen.mejor_individuo is not None:
-                matriz = renderizar(
-                    gen.mejor_individuo.genes, ancho, alto, config, recursos
-                )
-                frames.append(Image.fromarray(matriz))
+    for idx, gen in enumerate(gens_seleccionadas, start=1):
+        matriz = renderizar(
+            gen.mejor_individuo.genes, ancho, alto, config, recursos
+        )
+        frames.append(Image.fromarray(matriz))
+        if callback_progreso:
+            callback_progreso(idx, total_frames, gen.generacion)
 
     if frames:
         if len(frames) == 1:

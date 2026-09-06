@@ -123,7 +123,38 @@ def main():
     print("------------------------------------------------------------")
     print("Guardando archivos de salida...")
 
-    guardar_salidas(registro, config, result_path, img_path, recursos=recursos)
+    estado_img = {
+        "inicio": time.perf_counter(),
+        "activo": False,
+    }
+
+    def callback_progreso_imagen(actual, total, gen):
+        estado_img["activo"] = True
+        transcurrido = time.perf_counter() - estado_img["inicio"]
+        vel = actual / transcurrido if transcurrido > 0 else 0.0
+        pct = (actual / total) * 100 if total > 0 else 100.0
+        ancho_num = max(4, len(str(total)))
+        linea = (
+            f"\r[Frame {actual:0{ancho_num}d}/{total:0{ancho_num}d}] "
+            f"Gen: {gen:04d} | "
+            f"{pct:5.1f}% | "
+            f"{vel:.1f} frame/s"
+        )
+        sys.stdout.write(linea)
+        sys.stdout.flush()
+
+    guardar_salidas(
+        registro,
+        config,
+        result_path,
+        img_path,
+        recursos=recursos,
+        callback_progreso=callback_progreso_imagen,
+    )
+
+    if estado_img["activo"]:
+        sys.stdout.write("\n")
+        sys.stdout.flush()
 
     print(f"Resultados guardados:")
     print(f"  - {result_path}/metricas.csv")

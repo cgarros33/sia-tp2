@@ -28,7 +28,7 @@
   "max_rotation_delta": 0.05,
   "max_radius_delta": 10.0,
   "max_coord_overflow": 10.0,
-  "max_generations": 100000,
+  "max_generations": 5000,
   "fitness_cutoff": 0.99,
   "stale_content_generation_cutoff": 300,
   "stale_content_epsilon": 0.0,
@@ -36,7 +36,7 @@
   "tipo_sesgo_color": "bounding_box",
   "save_best": true,
   "best_resolution_multiplier": 2.0,
-  "gif_gen_interval": 1,
+  "gif_gen_interval": 10,
   "save_every_n_generations": 10,
   "workers": 0,
   "random_seed": 33333333
