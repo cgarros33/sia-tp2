@@ -19,6 +19,7 @@ CAMPOS = (
     "tournament_size",
     "tournament_threshold",
     "temperature",
+    "uniform_crossover_P",
     "extra_gene_Pm",
     "intra_gene_Pm",
     "max_genes_to_mutate",
@@ -30,7 +31,12 @@ CAMPOS = (
     "max_generations",
     "fitness_cutoff",
     "stale_content_generation_cutoff",
+    "stale_content_epsilon",
     "sesgo_color_inicial",
+    "tipo_sesgo_color",
+    "save_best",
+    "best_resolution_multiplier",
+    "gif_gen_interval",
     "random_seed",
 )
 
@@ -52,6 +58,8 @@ METODOS_DE_MUTACION = ("gen", "multigen", "uniforme", "no_uniforme")
 
 ESTRATEGIAS_DE_SUPERVIVENCIA = ("aditiva", "exclusiva")
 
+TIPOS_DE_SESGO_COLOR = ("bounding_box", "exact_match")
+
 ENTEROS_POSITIVOS = (
     "gene_count",
     "population_size",
@@ -60,11 +68,21 @@ ENTEROS_POSITIVOS = (
     "max_genes_to_mutate",
     "max_generations",
     "stale_content_generation_cutoff",
+    "gif_gen_interval",
 )
 
-PROBABILIDADES = ("extra_gene_Pm", "intra_gene_Pm", "fitness_cutoff")
+PROBABILIDADES = (
+    "uniform_crossover_P",
+    "extra_gene_Pm",
+    "intra_gene_Pm",
+    "fitness_cutoff",
+)
 
-POSITIVOS_ESTRICTOS = ("temperature", "output_resolution_mult")
+POSITIVOS_ESTRICTOS = (
+    "temperature",
+    "output_resolution_mult",
+    "best_resolution_multiplier",
+)
 
 NO_NEGATIVOS = (
     "max_coord_delta",
@@ -72,6 +90,7 @@ NO_NEGATIVOS = (
     "max_rotation_delta",
     "max_radius_delta",
     "max_coord_overflow",
+    "stale_content_epsilon",
 )
 
 PATHS = ("file_input", "overlay_source")
@@ -205,6 +224,7 @@ def _validar(config):
     _exigir_opcion(config, "cruza", METODOS_DE_CRUZA)
     _exigir_opcion(config, "mutacion", METODOS_DE_MUTACION)
     _exigir_opcion(config, "supervivencia", ESTRATEGIAS_DE_SUPERVIVENCIA)
+    _exigir_opcion(config, "tipo_sesgo_color", TIPOS_DE_SESGO_COLOR)
 
     _validar_color_de_fondo(config)
 
@@ -218,6 +238,12 @@ def _validar(config):
         raise ErrorDeConfiguracion(
             f"'sesgo_color_inicial' tiene que ser booleano, es "
             f"{config['sesgo_color_inicial']!r}"
+        )
+
+    if not isinstance(config["save_best"], bool):
+        raise ErrorDeConfiguracion(
+            f"'save_best' tiene que ser booleano, es "
+            f"{config['save_best']!r}"
         )
 
     _exigir_entero(config, "random_seed")

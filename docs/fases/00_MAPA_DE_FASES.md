@@ -1,7 +1,6 @@
 # Mapa de fases — TP2 Algoritmos Genéticos
 
-Índice del trabajo. Cada fase tiene su propio `.md` en esta carpeta y produce un
-resumen en `docs/resumenes/`.
+Índice del trabajo. Cada fase produce un resumen en `docs/resumenes/`.
 
 Orden de lectura para arrancar una fase:
 
@@ -9,17 +8,10 @@ Orden de lectura para arrancar una fase:
 2. `docs/reglas.md`
 3. `docs/contexto.md`
 4. este documento
-5. `docs/fases/FASE_NN_<nombre>.md` — solo la fase que corresponda
-
-Cada documento de fase es autocontenido: lleva adentro las firmas que produce y
-también las de otras fases que necesita usar.
 
 ---
 
 ## Reglas que valen para todas las fases
-
-Se repiten en cada documento de fase porque el agente arranca con contexto limpio
-cada vez. No son negociables.
 
 1. **El agente no escribe en git.** Nada de `commit`, `push`, `merge`, `rebase`,
    `reset`, `checkout <rama>`, `stash`, `tag`, `gh pr create`. Puede leer con
@@ -36,11 +28,13 @@ cada vez. No son negociables.
 5. **Código sin comentarios.** Se comenta solo una cuenta que no se lee del
    código o una regla que si alguien la borra rompe algo. Docstrings de una
    línea.
-6. **Nadie toca archivos fuera de su fase.** La sección "Archivos que produce" de
-   cada documento es el límite. Si hace falta tocar algo de otra fase, se avisa
-   antes.
-7. **Toda fase termina con su resumen** en `docs/resumenes/`, siguiendo
-   `docs/resumenes/_PLANTILLA.md`.
+6. **Nadie toca archivos fuera de su fase.** La columna "Archivos que produce"
+   de la tabla de fases es el límite. Si hace falta tocar algo de otra fase, se
+   avisa antes.
+7. **No hay documentos de fase.** La única documentación por fase es su resumen
+   en `docs/resumenes/`, escrito al terminar siguiendo
+   `docs/resumenes/_PLANTILLA.md`. La especificación del trabajo es
+   `docs/contexto.md` y no se duplica en ningún lado.
 
 ---
 
@@ -75,9 +69,8 @@ puntos de entrada.
 
 **Ola 2.** El renderizador necesita que existan las figuras, el fitness necesita
 el renderizador, e Individuo y Población necesitan los dos. Aun así las dos fases
-van en paralelo: el documento de la fase 03 incluye la firma de
-`calcular_fitness`, así que se programa contra esa firma sin esperar a que la 02
-esté terminada.
+van en paralelo: la fase 03 se programa contra la firma acordada del evaluador
+de fitness, sin esperar a que la 02 esté terminada.
 
 **Ola 3.** Cuatro familias de operadores sin solapamiento entre sí. Las cuatro
 dependen solamente de la interfaz de `Individuo`, que queda fija en la ola 2.
@@ -99,29 +92,16 @@ necesita los experimentos.
 
 1. **Rama propia.** `git checkout -b fase-NN-<nombre>`, hecho por la persona, no
    por el agente.
-2. **Al agente se le pasa el documento de la fase** junto con `CLAUDE.md`,
-   `docs/reglas.md` y `docs/contexto.md`. El prompt lo arma cada integrante, pero
-   tiene que dejar claro: que implemente solo esa fase, que no toque archivos
-   fuera de la lista de la sección 2, que no commitee ni pushee, que no se firme
-   como coautor y que haga el checkpoint antes de cada archivo que calcule.
+2. **Al agente se le pasan `CLAUDE.md`, `docs/reglas.md`, `docs/contexto.md` y
+   este mapa.** El prompt lo arma cada integrante, pero tiene que dejar claro:
+   qué fase implementa, que no toque archivos fuera de la fila de esa fase, que
+   no commitee ni pushee, que no se firme como coautor y que haga el checkpoint
+   antes de cada archivo que calcule.
 3. **El agente explica antes de escribir.** Primero dice qué entendió y qué dudas
    tiene; recién después arranca.
 4. **Checkpoints.** Cada archivo que calcula dispara uno.
-5. **Verificación.** Se corren las comprobaciones de la sección "Cómo se
-   verifica" antes de dar la fase por terminada.
+5. **Verificación.** Se corren las comprobaciones acordadas en el plan antes de
+   dar la fase por terminada.
 6. **Resumen.** Se escribe `docs/resumenes/FASE_NN_RESUMEN.md` siguiendo la
    plantilla.
 7. **La persona commitea y pushea.** El agente avisa qué archivos tocó y espera.
-
----
-
-## Riesgo del trabajo en paralelo
-
-Cuatro personas sobre el mismo repo con agentes distintos chocan si alguien se
-sale de su lista de archivos. Dos medidas:
-
-- **Los documentos de fase no se editan por cuenta propia.** Si al implementar
-  aparece que una firma tiene que cambiar, se avisa y se cambia una sola vez en
-  los documentos afectados. Esas firmas son lo que hace posible el paralelismo.
-- **`config/conf.json` lo toca solo la fase 00.** Cualquier campo nuevo que una
-  fase necesite se pide, no se agrega por cuenta propia.
