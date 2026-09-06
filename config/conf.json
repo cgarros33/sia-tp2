@@ -19,6 +19,7 @@
   "tournament_size": 5,
   "tournament_threshold": 0.75,
   "temperature": 1.0,
+  "uniform_crossover_P": 0.5,
   "extra_gene_Pm": 0.15,
   "intra_gene_Pm": 0.2,
   "max_genes_to_mutate": 5,

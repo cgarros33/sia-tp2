@@ -19,6 +19,7 @@ CAMPOS = (
     "tournament_size",
     "tournament_threshold",
     "temperature",
+    "uniform_crossover_P",
     "extra_gene_Pm",
     "intra_gene_Pm",
     "max_genes_to_mutate",
@@ -62,7 +63,12 @@ ENTEROS_POSITIVOS = (
     "stale_content_generation_cutoff",
 )
 
-PROBABILIDADES = ("extra_gene_Pm", "intra_gene_Pm", "fitness_cutoff")
+PROBABILIDADES = (
+    "uniform_crossover_P",
+    "extra_gene_Pm",
+    "intra_gene_Pm",
+    "fitness_cutoff",
+)
 
 POSITIVOS_ESTRICTOS = ("temperature", "output_resolution_mult")
 
