@@ -22,7 +22,7 @@
   "uniform_crossover_P": 0.5,
   "extra_gene_Pm": 0.15,
   "intra_gene_Pm": 0.2,
-  "max_genes_to_mutate": 5,
+  "max_genes_to_mutate": 15,
   "max_coord_delta": 15.0,
   "max_color_delta": 25,
   "max_rotation_delta": 0.05,
@@ -31,6 +31,8 @@
   "max_generations": 1000,
   "fitness_cutoff": 0.99,
   "stale_content_generation_cutoff": 300,
+  "stale_content_epsilon": 0.0,
   "sesgo_color_inicial": false,
+  "tipo_sesgo_color": "bounding_box",
   "random_seed": 42
 }

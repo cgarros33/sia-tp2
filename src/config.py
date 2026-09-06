@@ -31,7 +31,9 @@ CAMPOS = (
     "max_generations",
     "fitness_cutoff",
     "stale_content_generation_cutoff",
+    "stale_content_epsilon",
     "sesgo_color_inicial",
+    "tipo_sesgo_color",
     "random_seed",
 )
 
@@ -52,6 +54,8 @@ METODOS_DE_CRUZA = ("un_punto", "dos_puntos", "uniforme", "anular")
 METODOS_DE_MUTACION = ("gen", "multigen", "uniforme", "no_uniforme")
 
 ESTRATEGIAS_DE_SUPERVIVENCIA = ("aditiva", "exclusiva")
+
+TIPOS_DE_SESGO_COLOR = ("bounding_box", "exact_match")
 
 ENTEROS_POSITIVOS = (
     "gene_count",
@@ -78,6 +82,7 @@ NO_NEGATIVOS = (
     "max_rotation_delta",
     "max_radius_delta",
     "max_coord_overflow",
+    "stale_content_epsilon",
 )
 
 PATHS = ("file_input", "overlay_source")
@@ -211,6 +216,7 @@ def _validar(config):
     _exigir_opcion(config, "cruza", METODOS_DE_CRUZA)
     _exigir_opcion(config, "mutacion", METODOS_DE_MUTACION)
     _exigir_opcion(config, "supervivencia", ESTRATEGIAS_DE_SUPERVIVENCIA)
+    _exigir_opcion(config, "tipo_sesgo_color", TIPOS_DE_SESGO_COLOR)
 
     _validar_color_de_fondo(config)
 

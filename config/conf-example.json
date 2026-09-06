@@ -1,0 +1,118 @@
+{
+  "_nota": "Archivo de configuración de ejemplo con todas las variables, opciones permitidas y valores por defecto.",
+
+  "gene_count": 100,
+  "_comentario_gene_count": "Entero >= 1. Cantidad de figuras (genes) que componen cada individuo.",
+
+  "file_input": "resources/bron500.png",
+  "_comentario_file_input": "Path a la imagen objetivo a aproximar.",
+
+  "gene_type": "triangle",
+  "_opciones_gene_type": ["triangle", "quad", "pentagon", "oval", "png"],
+
+  "overlay_source": "resources/bron30.png",
+  "_comentario_overlay_source": "Path a la imagen usada cuando gene_type es 'png'.",
+
+  "background_color": [255, 255, 255, 255],
+  "_comentario_background_color": "Lista [R, G, B, A] de enteros entre 0 y 255. Color de fondo del lienzo.",
+
+  "output_resolution_mult": 1.0,
+  "_comentario_output_resolution_mult": "Número > 0. Multiplicador de resolución sobre la imagen objetivo.",
+
+  "seleccion": "torneo_deterministico",
+  "_opciones_seleccion": [
+    "elite",
+    "ruleta",
+    "universal",
+    "boltzmann",
+    "torneo_deterministico",
+    "torneo_probabilistico",
+    "ranking"
+  ],
+
+  "cruza": "dos_puntos",
+  "_opciones_cruza": [
+    "un_punto",
+    "dos_puntos",
+    "uniforme",
+    "anular"
+  ],
+
+  "mutacion": "multigen",
+  "_opciones_mutacion": [
+    "gen",
+    "multigen",
+    "uniforme",
+    "no_uniforme"
+  ],
+
+  "supervivencia": "aditiva",
+  "_opciones_supervivencia": [
+    "aditiva",
+    "exclusiva"
+  ],
+
+  "population_size": 100,
+  "_comentario_population_size": "Entero >= 1. Cantidad de individuos en la población.",
+
+  "selected_count": 100,
+  "_comentario_selected_count": "Entero par >= 2. Cantidad de individuos seleccionados para reproducirse.",
+
+  "tournament_size": 5,
+  "_comentario_tournament_size": "Entero entre 1 y population_size. Tamaño del grupo en torneo determinístico.",
+
+  "tournament_threshold": 0.75,
+  "_comentario_tournament_threshold": "Número en [0.5, 1.0]. Umbral de probabilidad en torneo probabilístico.",
+
+  "temperature": 1.0,
+  "_comentario_temperature": "Número > 0. Parámetro de temperatura para selección de Boltzmann.",
+
+  "uniform_crossover_P": 0.5,
+  "_comentario_uniform_crossover_P": "Número en [0.0, 1.0]. Probabilidad de intercambio por locus en cruce uniforme.",
+
+  "extra_gene_Pm": 0.15,
+  "_comentario_extra_gene_Pm": "Número en [0.0, 1.0]. Probabilidad de mutación por gen.",
+
+  "intra_gene_Pm": 0.2,
+  "_comentario_intra_gene_Pm": "Número en [0.0, 1.0]. Probabilidad de mutar cada parámetro dentro del gen.",
+
+  "max_genes_to_mutate": 5,
+  "_comentario_max_genes_to_mutate": "Entero entre 1 y gene_count. Cota superior de genes que mutan en multigen.",
+
+  "max_coord_delta": 15.0,
+  "_comentario_max_coord_delta": "Número >= 0. Delta máximo de mutación en coordenadas.",
+
+  "max_color_delta": 25,
+  "_comentario_max_color_delta": "Número >= 0. Delta máximo de mutación en componentes RGBA.",
+
+  "max_rotation_delta": 0.05,
+  "_comentario_max_rotation_delta": "Número >= 0. Delta máximo de rotación (óvalos y png).",
+
+  "max_radius_delta": 10.0,
+  "_comentario_max_radius_delta": "Número >= 0. Delta máximo de radios (óvalos y png).",
+
+  "max_coord_overflow": 10.0,
+  "_comentario_max_coord_overflow": "Número >= 0. Margen permitido fuera del canvas para coordenadas.",
+
+  "max_generations": 1000,
+  "_comentario_max_generations": "Entero >= 1. Cantidad máxima de generaciones a ejecutar.",
+
+  "fitness_cutoff": 0.99,
+  "_comentario_fitness_cutoff": "Número en [0.0, 1.0]. Umbral de fitness para corte por condición óptima.",
+
+  "stale_content_generation_cutoff": 300,
+  "_comentario_stale_content_generation_cutoff": "Entero >= 1. Generaciones consecutivas sin mejora para corte por estancamiento.",
+
+  "stale_content_epsilon": 0.0,
+  "_comentario_stale_content_epsilon": "Número >= 0.0. Mejora mínima sobre el mejor fitness para no contar estancamiento.",
+
+  "sesgo_color_inicial": false,
+  "_comentario_sesgo_color_inicial": "Booleano. Si es true, el color de la figura se inicializa según la región del objetivo.",
+
+  "tipo_sesgo_color": "bounding_box",
+  "_opciones_tipo_sesgo_color": ["bounding_box", "exact_match"],
+  "_comentario_tipo_sesgo_color": "'bounding_box' promedia la caja contenedora; 'exact_match' promedia los píxeles exactos de la figura.",
+
+  "random_seed": 42,
+  "_comentario_random_seed": "Entero. Semilla para el generador pseudoaleatorio."
+}
