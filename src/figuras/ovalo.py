@@ -10,7 +10,7 @@ class Ovalo(FiguraElipsoidal):
 
     __slots__ = ()
 
-    def dibujar(self, destino, recursos):
+    def dibujar(self, destino, recursos, pincel=None):
         """Dibuja la elipse en una capa del tamaño de su caja, la rota y la compone sobre el destino."""
         ancho_caja, alto_caja = self._caja()
         # La capa nace del color de la figura con alfa cero: al rotarla se

@@ -84,12 +84,12 @@ class Poblacion:
 
     def diversidad(self):
         """Devuelve el desvío estándar promedio de los parámetros, normalizado por el rango de cada uno."""
-        genotipos = np.stack(
-            [individuo.vector_parametros() for individuo in self._individuos]
-        )
         minimos, maximos = np.array(self._rangos).T
         anchos = np.tile(maximos - minimos, len(self._individuos[0]))
-        return float(np.mean(genotipos.std(axis=0) / anchos))
+        matriz = np.empty((len(self._individuos), len(anchos)), dtype=float)
+        for indice, individuo in enumerate(self._individuos):
+            matriz[indice] = [param for gen in individuo.genes for param in gen.parametros()]
+        return float(np.mean(matriz.std(axis=0) / anchos))
 
     def siguiente(self, individuos):
         """Devuelve la generación que sigue, con el mismo tamaño y los mismos rangos."""

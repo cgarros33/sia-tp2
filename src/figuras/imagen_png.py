@@ -12,7 +12,7 @@ class ImagenPng(FiguraElipsoidal):
 
     __slots__ = ()
 
-    def dibujar(self, destino, recursos):
+    def dibujar(self, destino, recursos, pincel=None):
         """Reescala el overlay, le aplica el filtro de color, lo rota y lo compone sobre el destino."""
         capa = recursos[CLAVE_OVERLAY].resize(self._caja(), Image.Resampling.BILINEAR)
         solido = Image.new("RGB", capa.size, self._color[:3])

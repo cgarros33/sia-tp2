@@ -38,6 +38,7 @@ CAMPOS = (
     "best_resolution_multiplier",
     "gif_gen_interval",
     "save_every_n_generations",
+    "workers",
     "random_seed",
 )
 
@@ -72,7 +73,7 @@ ENTEROS_POSITIVOS = (
     "gif_gen_interval",
 )
 
-ENTEROS_NO_NEGATIVOS = ("save_every_n_generations",)
+ENTEROS_NO_NEGATIVOS = ("save_every_n_generations", "workers")
 
 PROBABILIDADES = (
     "uniform_crossover_P",
@@ -166,6 +167,13 @@ def _convertir(nombre, texto, valor_base):
             ) from None
     if isinstance(valor_base, str):
         return texto
+    if nombre in POSITIVOS_ESTRICTOS or nombre in PROBABILIDADES:
+        try:
+            return float(texto)
+        except ValueError:
+            raise ErrorDeConfiguracion(
+                f"'{nombre}' es de tipo numérico y no se puede convertir '{texto}'"
+            ) from None
     try:
         return type(valor_base)(texto)
     except (TypeError, ValueError):

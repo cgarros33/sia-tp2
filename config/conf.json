@@ -1,7 +1,7 @@
 {
-  "gene_count": 1000,
+  "gene_count": 333,
   "file_input": "resources/bron500.png",
-  "gene_type": "quad",
+  "gene_type": "triangle",
   "overlay_source": "resources/bron30.png",
   "background_color": [
     0,
@@ -9,13 +9,13 @@
     0,
     0
   ],
-  "output_resolution_mult": 1,
+  "output_resolution_mult": 0.4,
   "seleccion": "torneo_deterministico",
   "cruza": "dos_puntos",
   "mutacion": "multigen",
   "supervivencia": "aditiva",
-  "population_size": 200,
-  "selected_count": 100,
+  "population_size": 100,
+  "selected_count": 24,
   "tournament_size": 5,
   "tournament_threshold": 0.75,
   "temperature": 1.0,
@@ -37,6 +37,7 @@
   "save_best": true,
   "best_resolution_multiplier": 2.0,
   "gif_gen_interval": 1,
-  "save_every_n_generations": 0,
+  "save_every_n_generations": 10,
+  "workers": 0,
   "random_seed": 33333333
 }

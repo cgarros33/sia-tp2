@@ -125,6 +125,9 @@
   "save_every_n_generations": 0,
   "_comentario_save_every_n_generations": "Entero >= 0. Intervalo de generaciones para guardar la imagen actual en img/current_<imagen>.png (0 para desactivar).",
 
+  "workers": 0,
+  "_comentario_workers": "Entero >= 0. Cantidad de procesos trabajadores para evaluación paralela (0 para automático según núcleos de CPU, 1 para secuencial).",
+
   "random_seed": 42,
   "_comentario_random_seed": "Entero. Semilla para el generador pseudoaleatorio."
 }

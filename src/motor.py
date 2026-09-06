@@ -49,6 +49,32 @@ SUPERVIVENCIAS = {
     "exclusiva": exclusiva.sobrevivientes,
 }
 
+_contexto_evaluador = {}
+
+
+def _iniciar_trabajador(config, objetivo, ancho, alto, recursos):
+    """Inicializa el contexto global de un proceso trabajador para evaluar individuos sin serializar recursos."""
+    import signal
+
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    _contexto_evaluador["config"] = config
+    _contexto_evaluador["objetivo"] = objetivo
+    _contexto_evaluador["ancho"] = ancho
+    _contexto_evaluador["alto"] = alto
+    _contexto_evaluador["recursos"] = recursos
+
+
+def _evaluar_genotipo_remoto(genes):
+    """Renderiza los genes y calcula el fitness usando el contexto local del proceso trabajador."""
+    matriz = renderizar(
+        genes,
+        _contexto_evaluador["ancho"],
+        _contexto_evaluador["alto"],
+        _contexto_evaluador["config"],
+        _contexto_evaluador["recursos"],
+    )
+    return calcular_fitness(matriz, _contexto_evaluador["objetivo"])
+
 
 def ejecutar_motor(
     config,
@@ -70,6 +96,39 @@ def ejecutar_motor(
         renderizar(genes, ancho, alto, config, recursos), objetivo
     )
 
+    num_workers = config.get("workers", 0)
+    if num_workers == 0:
+        import os
+
+        num_workers = min(os.cpu_count() or 1, 16)
+
+    pool = None
+    if num_workers > 1:
+        from concurrent.futures import ProcessPoolExecutor
+
+        pool = ProcessPoolExecutor(
+            max_workers=num_workers,
+            initializer=_iniciar_trabajador,
+            initargs=(config, objetivo, ancho, alto, recursos),
+        )
+
+    def evaluar_lote(individuos):
+        sucios = [ind for ind in individuos if ind.esta_sucio]
+        if not sucios:
+            return
+        if pool is not None:
+            genotipos = [ind.genes for ind in sucios]
+            chunksize = max(1, len(genotipos) // (num_workers * 2))
+            fitnesses = pool.map(
+                _evaluar_genotipo_remoto, genotipos, chunksize=chunksize
+            )
+            for ind, fit in zip(sucios, fitnesses):
+                ind._fitness = fit
+                ind._sucio = False
+        else:
+            for ind in sucios:
+                ind.fitness(evaluador)
+
     seleccionar = SELECCIONES[config["seleccion"]]
     cruzar = CRUZAS[config["cruza"]]
     mutar = MUTACIONES[config["mutacion"]]
@@ -84,6 +143,7 @@ def ejecutar_motor(
 
     try:
         poblacion = inicializar_poblacion(config, objetivo, ancho, alto, azar)
+        evaluar_lote(poblacion.individuos)
         poblacion.evaluar(evaluador)
         t_generacion = time.perf_counter() - t_gen_inicio
 
@@ -142,7 +202,7 @@ def ejecutar_motor(
 
             for hijo in hijos:
                 mutar(hijo, azar, config, ancho, alto)
-                hijo.fitness(evaluador)
+            evaluar_lote(hijos)
 
             sobrevivientes = sobrevivir(
                 poblacion.individuos,
@@ -158,5 +218,8 @@ def ejecutar_motor(
             t_generacion = time.perf_counter() - t_gen_inicio
     except KeyboardInterrupt:
         registro.finalizar("interrupcion_usuario")
+    finally:
+        if pool is not None:
+            pool.shutdown(wait=False, cancel_futures=True)
 
     return registro, registro.mejor_historico

@@ -22,7 +22,7 @@ class Figura(ABC):
         """Devuelve una copia independiente de esta figura."""
 
     @abstractmethod
-    def dibujar(self, destino, recursos):
+    def dibujar(self, destino, recursos, pincel=None):
         """Pinta la figura sobre el destino componiendo su color con lo que ya está dibujado."""
 
     @abstractmethod
