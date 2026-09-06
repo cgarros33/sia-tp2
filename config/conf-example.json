@@ -113,6 +113,15 @@
   "_opciones_tipo_sesgo_color": ["bounding_box", "exact_match"],
   "_comentario_tipo_sesgo_color": "'bounding_box' promedia la caja contenedora; 'exact_match' promedia los píxeles exactos de la figura.",
 
+  "save_best": true,
+  "_comentario_save_best": "Booleano. Si es true, renderiza y guarda el PNG del mejor individuo al final de la corrida.",
+
+  "best_resolution_multiplier": 2.0,
+  "_comentario_best_resolution_multiplier": "Número > 0. Factor por el cual se escala la resolución vectorial al guardar el mejor PNG.",
+
+  "gif_gen_interval": 1,
+  "_comentario_gif_gen_interval": "Entero >= 1. Intervalo de generaciones para incluir frames en el GIF animado.",
+
   "random_seed": 42,
   "_comentario_random_seed": "Entero. Semilla para el generador pseudoaleatorio."
 }

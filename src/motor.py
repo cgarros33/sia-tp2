@@ -84,73 +84,76 @@ def ejecutar_motor(
     mejor_fitness_historico = None
     generaciones_sin_mejora = 0
 
-    while True:
-        t_inicio = time.perf_counter()
-        fit_max = poblacion.fitness_maximo
-        fit_min = poblacion.fitness_minimo
-        fit_prom = poblacion.fitness_promedio
-        diversidad = poblacion.diversidad()
-        mejor = poblacion.mejor()
-        t_generacion = time.perf_counter() - t_inicio
+    try:
+        while True:
+            t_inicio = time.perf_counter()
+            fit_max = poblacion.fitness_maximo
+            fit_min = poblacion.fitness_minimo
+            fit_prom = poblacion.fitness_promedio
+            diversidad = poblacion.diversidad()
+            mejor = poblacion.mejor()
+            t_generacion = time.perf_counter() - t_inicio
 
-        registro.registrar_generacion(
-            poblacion.generacion,
-            fit_max,
-            fit_min,
-            fit_prom,
-            diversidad,
-            mejor,
-            t_generacion,
-            poblacion.individuos,
-        )
+            registro.registrar_generacion(
+                poblacion.generacion,
+                fit_max,
+                fit_min,
+                fit_prom,
+                diversidad,
+                mejor,
+                t_generacion,
+                poblacion.individuos,
+            )
 
-        if callback_generacion is not None:
-            callback_generacion(poblacion, registro)
+            if callback_generacion is not None:
+                callback_generacion(poblacion, registro)
 
-        if fit_max >= config["fitness_cutoff"]:
-            registro.finalizar("fitness_cutoff")
-            break
-
-        if mejor_fitness_historico is None:
-            mejor_fitness_historico = fit_max
-        elif fit_max > mejor_fitness_historico + config["stale_content_epsilon"]:
-            mejor_fitness_historico = fit_max
-            generaciones_sin_mejora = 0
-        else:
-            generaciones_sin_mejora += 1
-            if generaciones_sin_mejora >= config["stale_content_generation_cutoff"]:
-                registro.finalizar("stale_content_generation_cutoff")
+            if fit_max >= config["fitness_cutoff"]:
+                registro.finalizar("fitness_cutoff")
                 break
 
-        if poblacion.generacion >= config["max_generations"]:
-            registro.finalizar("max_generations")
-            break
+            if mejor_fitness_historico is None:
+                mejor_fitness_historico = fit_max
+            elif fit_max > mejor_fitness_historico + config["stale_content_epsilon"]:
+                mejor_fitness_historico = fit_max
+                generaciones_sin_mejora = 0
+            else:
+                generaciones_sin_mejora += 1
+                if generaciones_sin_mejora >= config["stale_content_generation_cutoff"]:
+                    registro.finalizar("stale_content_generation_cutoff")
+                    break
 
-        padres = list(
-            seleccionar(poblacion.individuos, config["selected_count"], azar, config)
-        )
-        azar.shuffle(padres)
+            if poblacion.generacion >= config["max_generations"]:
+                registro.finalizar("max_generations")
+                break
 
-        hijos = []
-        for indice in range(0, len(padres), 2):
-            hijo1, hijo2 = cruzar(padres[indice], padres[indice + 1], azar, config)
-            hijos.append(hijo1)
-            hijos.append(hijo2)
+            padres = list(
+                seleccionar(poblacion.individuos, config["selected_count"], azar, config)
+            )
+            azar.shuffle(padres)
 
-        for hijo in hijos:
-            mutar(hijo, azar, config, ancho, alto)
-            hijo.fitness(evaluador)
+            hijos = []
+            for indice in range(0, len(padres), 2):
+                hijo1, hijo2 = cruzar(padres[indice], padres[indice + 1], azar, config)
+                hijos.append(hijo1)
+                hijos.append(hijo2)
 
-        sobrevivientes = sobrevivir(
-            poblacion.individuos,
-            hijos,
-            config["population_size"],
-            seleccionar,
-            azar,
-            config,
-        )
+            for hijo in hijos:
+                mutar(hijo, azar, config, ancho, alto)
+                hijo.fitness(evaluador)
 
-        poblacion = poblacion.siguiente(sobrevivientes)
-        poblacion.evaluar(evaluador)
+            sobrevivientes = sobrevivir(
+                poblacion.individuos,
+                hijos,
+                config["population_size"],
+                seleccionar,
+                azar,
+                config,
+            )
+
+            poblacion = poblacion.siguiente(sobrevivientes)
+            poblacion.evaluar(evaluador)
+    except KeyboardInterrupt:
+        registro.finalizar("interrupcion_usuario")
 
     return registro, registro.mejor_historico

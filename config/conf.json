@@ -34,5 +34,8 @@
   "stale_content_epsilon": 0.0,
   "sesgo_color_inicial": false,
   "tipo_sesgo_color": "bounding_box",
+  "save_best": true,
+  "best_resolution_multiplier": 2.0,
+  "gif_gen_interval": 1,
   "random_seed": 42
 }
