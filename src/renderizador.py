@@ -1,7 +1,7 @@
 """Carga las imágenes de la corrida y convierte una lista de figuras en el fenotipo."""
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 
 from src.figuras.imagen_png import CLAVE_OVERLAY
 
@@ -35,8 +35,9 @@ def renderizar(figuras, ancho, alto, config, recursos):
     # El lienzo va sin canal alfa: es el único modo en el que Pillow compone la
     # transparencia de la figura en vez de pisar el píxel.
     lienzo = Image.new("RGB", (ancho, alto), tuple(config["background_color"][:3]))
+    pincel = ImageDraw.Draw(lienzo, "RGBA")
     for figura in figuras:
-        figura.dibujar(lienzo, recursos)
+        figura.dibujar(lienzo, recursos, pincel=pincel)
     return np.asarray(lienzo, dtype=np.uint8)
 
 

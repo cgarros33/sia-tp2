@@ -121,3 +121,10 @@ dentro de un archivo `.py`.
 
 Si una especificación te parece equivocada, incompleta o
 contradictoria: **decilo antes de implementarla**.
+
+## 8. Sincronización de configuración y `conf-example.json`
+
+Cualquier cambio o agregado a la configuración (`config/conf.json` o
+`src/config.py`) exige actualizar obligatoriamente `config/conf-example.json`
+con todas las variables, todos sus valores posibles y una explicación concisa
+de qué hace cada uno si no es autoexplicativo.

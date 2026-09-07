@@ -4,14 +4,14 @@ CONFIG_PATH_POR_DEFECTO = "config/conf.json"
 RESULT_PATH_POR_DEFECTO = "results"
 IMG_PATH_POR_DEFECTO = "img"
 
-FLAG_CONFIG_PATH = "--config-path"
-FLAG_RESULT_PATH = "--result-path"
-FLAG_IMG_PATH = "--img-path"
-FLAG_SAVE_ALL = "--save-all"
+FLAGS_CONFIG_PATH = ("--config-path", "--config_path", "--config-file", "--config_file")
+FLAGS_RESULT_PATH = ("--result-path", "--result_path")
+FLAGS_IMG_PATH = ("--img-path", "--img_path")
+FLAGS_SAVE_ALL = ("--save-all", "--save_all")
 
 FORMAS_ACEPTADAS = (
-    f"{FLAG_CONFIG_PATH}=<path>, {FLAG_RESULT_PATH}=<path>, "
-    f"{FLAG_IMG_PATH}=<path>, {FLAG_SAVE_ALL} y --<nombre_de_campo>=<valor>"
+    "--config-path=<path> (o --config_file), --result-path=<path>, "
+    "--img-path=<path>, --save-all y --<nombre_de_campo>=<valor>"
 )
 
 
@@ -28,7 +28,7 @@ def parsear_args(argumentos):
     overrides = {}
 
     for argumento in argumentos:
-        if argumento == FLAG_SAVE_ALL:
+        if argumento in FLAGS_SAVE_ALL:
             save_all = True
             continue
 
@@ -39,21 +39,16 @@ def parsear_args(argumentos):
                 f"son: {FORMAS_ACEPTADAS}"
             )
 
-        if nombre == FLAG_SAVE_ALL:
-            raise ErrorDeArgumentos(f"'{FLAG_SAVE_ALL}' no lleva valor")
-        if nombre == FLAG_CONFIG_PATH:
+        if nombre in FLAGS_SAVE_ALL:
+            raise ErrorDeArgumentos(f"'{nombre}' no lleva valor")
+        if nombre in FLAGS_CONFIG_PATH:
             config_path = valor
-        elif nombre == FLAG_RESULT_PATH:
+        elif nombre in FLAGS_RESULT_PATH:
             result_path = valor
-        elif nombre == FLAG_IMG_PATH:
+        elif nombre in FLAGS_IMG_PATH:
             img_path = valor
-        elif "-" in nombre[2:]:
-            raise ErrorDeArgumentos(
-                f"'{nombre}' no es un flag estructural, y los overrides de "
-                f"configuración se escriben con guión bajo: "
-                f"--{nombre[2:].replace('-', '_')}={valor}"
-            )
         else:
-            overrides[nombre[2:]] = valor
+            clave = nombre[2:].replace("-", "_")
+            overrides[clave] = valor
 
     return config_path, result_path, img_path, save_all, overrides

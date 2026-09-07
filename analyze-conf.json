@@ -1,0 +1,514 @@
+{
+  "output_dir": "results/analysis",
+  "base_config_path": "config/conf.json",
+  "use_random_seed": false,
+  "default_seed": 33333333,
+  "experiments": [
+    {
+      "id": "op_01_seleccion",
+      "name": "Comparación Aislada de Selección",
+      "description": "Presión selectiva de los 7 métodos sobre una población fija de 100 individuos evaluando frecuencias de muestreo",
+      "enabled": true,
+      "type": "operator",
+      "operator_target": "seleccion",
+      "iterations": 1000,
+      "population_size": 100,
+      "selected_count": 20,
+      "variants": [
+        {
+          "id": "elite",
+          "name": "Elite",
+          "overrides": { "seleccion": "elite" }
+        },
+        {
+          "id": "ruleta",
+          "name": "Ruleta",
+          "overrides": { "seleccion": "ruleta" }
+        },
+        {
+          "id": "universal",
+          "name": "Universal",
+          "overrides": { "seleccion": "universal" }
+        },
+        {
+          "id": "ranking",
+          "name": "Ranking",
+          "overrides": { "seleccion": "ranking" }
+        },
+        {
+          "id": "torneo_det_3",
+          "name": "Torneo Det (k=3)",
+          "overrides": { "seleccion": "torneo_deterministico", "tournament_size": 3 }
+        },
+        {
+          "id": "torneo_prob_75",
+          "name": "Torneo Prob (p=0.75)",
+          "overrides": { "seleccion": "torneo_probabilistico", "tournament_threshold": 0.75 }
+        },
+        {
+          "id": "boltzmann",
+          "name": "Boltzmann (T=0.0001)",
+          "overrides": { "seleccion": "boltzmann", "temperature": 0.0001 }
+        }
+      ],
+      "outputs": {
+        "plots": ["frecuencia_seleccion"],
+        "save_csv": true,
+        "save_summary": true
+      }
+    },
+    {
+      "id": "op_02_cruza",
+      "name": "Comparación Aislada de Cruza",
+      "description": "Distribución de loci y cantidad de genes recombinados para los 4 métodos de cruza con 100 genes",
+      "enabled": true,
+      "type": "operator",
+      "operator_target": "cruza",
+      "iterations": 1000,
+      "gene_count": 100,
+      "variants": [
+        {
+          "id": "un_punto",
+          "name": "Un Punto",
+          "overrides": { "cruza": "un_punto" }
+        },
+        {
+          "id": "dos_puntos",
+          "name": "Dos Puntos",
+          "overrides": { "cruza": "dos_puntos" }
+        },
+        {
+          "id": "anular",
+          "name": "Anular",
+          "overrides": { "cruza": "anular" }
+        },
+        {
+          "id": "uniforme",
+          "name": "Uniforme (P=0.5)",
+          "overrides": { "cruza": "uniforme", "uniform_crossover_P": 0.5 }
+        }
+      ],
+      "outputs": {
+        "plots": ["genes_intercambiados", "frecuencia_locus"],
+        "save_csv": true,
+        "save_summary": true
+      }
+    },
+    {
+      "id": "op_03_mutacion",
+      "name": "Comparación Aislada de Mutación",
+      "description": "Distribución de cantidad de genes mutados por individuo sobre 100 genes",
+      "enabled": true,
+      "type": "operator",
+      "operator_target": "mutacion",
+      "iterations": 1000,
+      "gene_count": 100,
+      "variants": [
+        {
+          "id": "gen",
+          "name": "Gen (1 gen)",
+          "overrides": { "mutacion": "gen", "extra_gene_Pm": 0.5, "intra_gene_Pm": 1.0 }
+        },
+        {
+          "id": "multigen_5",
+          "name": "MultiGen (max 5)",
+          "overrides": { "mutacion": "multigen", "max_genes_to_mutate": 5, "extra_gene_Pm": 0.5, "intra_gene_Pm": 1.0 }
+        },
+        {
+          "id": "multigen_15",
+          "name": "MultiGen (max 15)",
+          "overrides": { "mutacion": "multigen", "max_genes_to_mutate": 15, "extra_gene_Pm": 0.5, "intra_gene_Pm": 1.0 }
+        },
+        {
+          "id": "uniforme",
+          "name": "Uniforme (Pm=0.1)",
+          "overrides": { "mutacion": "uniforme", "extra_gene_Pm": 0.1, "intra_gene_Pm": 1.0 }
+        },
+        {
+          "id": "no_uniforme",
+          "name": "No Uniforme (Pm=0.1)",
+          "overrides": { "mutacion": "no_uniforme", "extra_gene_Pm": 0.1, "intra_gene_Pm": 1.0 }
+        }
+      ],
+      "outputs": {
+        "plots": ["genes_mutados"],
+        "save_csv": true,
+        "save_summary": true
+      }
+    },
+    {
+      "id": "op_04_supervivencia",
+      "name": "Comparación Aislada de Supervivencia",
+      "description": "Cantidad de padres e hijos preservados bajo reemplazo aditivo vs exclusivo",
+      "enabled": true,
+      "type": "operator",
+      "operator_target": "supervivencia",
+      "iterations": 100,
+      "population_size": 100,
+      "variants": [
+        {
+          "id": "aditiva_k20",
+          "name": "Aditiva (K=20)",
+          "overrides": { "supervivencia": "aditiva", "selected_count": 20, "seleccion": "torneo_deterministico", "tournament_size": 3 }
+        },
+        {
+          "id": "exclusiva_k20",
+          "name": "Exclusiva (K=20)",
+          "overrides": { "supervivencia": "exclusiva", "selected_count": 20, "seleccion": "torneo_deterministico", "tournament_size": 3 }
+        },
+        {
+          "id": "aditiva_k100",
+          "name": "Aditiva (K=100)",
+          "overrides": { "supervivencia": "aditiva", "selected_count": 100, "seleccion": "torneo_deterministico", "tournament_size": 3 }
+        },
+        {
+          "id": "exclusiva_k100",
+          "name": "Exclusiva (K=100)",
+          "overrides": { "supervivencia": "exclusiva", "selected_count": 100, "seleccion": "torneo_deterministico", "tournament_size": 3 }
+        }
+      ],
+      "outputs": {
+        "plots": ["supervivencia_padres"],
+        "save_csv": true,
+        "save_summary": true
+      }
+    },
+    {
+      "id": "op_05_figuras_render",
+      "name": "Comparación Aislada de Figuras",
+      "description": "Tiempo de renderizado para 100 figuras de cada tipo sobre el lienzo",
+      "enabled": true,
+      "type": "operator",
+      "operator_target": "render",
+      "iterations": 50,
+      "gene_count": 100,
+      "variants": [
+        {
+          "id": "triangle",
+          "name": "Triángulo",
+          "overrides": { "gene_type": "triangle" }
+        },
+        {
+          "id": "quad",
+          "name": "Cuadrilátero",
+          "overrides": { "gene_type": "quad" }
+        },
+        {
+          "id": "pentagon",
+          "name": "Pentágono",
+          "overrides": { "gene_type": "pentagon" }
+        },
+        {
+          "id": "oval",
+          "name": "Óvalo",
+          "overrides": { "gene_type": "oval" }
+        }
+      ],
+      "outputs": {
+        "plots": ["tiempo_render"],
+        "save_csv": true,
+        "save_summary": true
+      }
+    },
+    {
+      "id": "full_01_inicializacion",
+      "name": "Evolución - Inicialización",
+      "description": "Comparación evolutiva de inicialización aleatoria vs sesgo de color",
+      "enabled": true,
+      "type": "full",
+      "base_overrides": {
+        "gene_count": 100,
+        "population_size": 30,
+        "selected_count": 14,
+        "max_generations": 30,
+        "output_resolution_mult": 0.3,
+        "save_every_n_generations": 0,
+        "save_best": false
+      },
+      "variants": [
+        {
+          "id": "aleatoria",
+          "name": "Aleatoria Uniforme",
+          "overrides": { "sesgo_color_inicial": false }
+        },
+        {
+          "id": "sesgo_bbox",
+          "name": "Sesgo Bounding Box",
+          "overrides": { "sesgo_color_inicial": true, "tipo_sesgo_color": "bounding_box" }
+        },
+        {
+          "id": "sesgo_exact",
+          "name": "Sesgo Exact Match",
+          "overrides": { "sesgo_color_inicial": true, "tipo_sesgo_color": "exact_match" }
+        }
+      ],
+      "outputs": {
+        "plots": ["fitness_maximo", "tiempo_generacion"],
+        "save_csv": true,
+        "save_summary": true,
+        "save_images": false,
+        "save_gif": false
+      }
+    },
+    {
+      "id": "full_02_seleccion",
+      "name": "Evolución - Selección",
+      "description": "Comparación evolutiva de los métodos de selección en 30 generaciones",
+      "enabled": true,
+      "type": "full",
+      "base_overrides": {
+        "gene_count": 100,
+        "population_size": 30,
+        "selected_count": 14,
+        "max_generations": 30,
+        "output_resolution_mult": 0.3,
+        "sesgo_color_inicial": true,
+        "tipo_sesgo_color": "bounding_box",
+        "save_every_n_generations": 0,
+        "save_best": false
+      },
+      "variants": [
+        {
+          "id": "elite",
+          "name": "Elite",
+          "overrides": { "seleccion": "elite" }
+        },
+        {
+          "id": "ruleta",
+          "name": "Ruleta",
+          "overrides": { "seleccion": "ruleta" }
+        },
+        {
+          "id": "ranking",
+          "name": "Ranking",
+          "overrides": { "seleccion": "ranking" }
+        },
+        {
+          "id": "torneo_det_3",
+          "name": "Torneo Det (k=3)",
+          "overrides": { "seleccion": "torneo_deterministico", "tournament_size": 3 }
+        },
+        {
+          "id": "torneo_prob_75",
+          "name": "Torneo Prob (p=0.75)",
+          "overrides": { "seleccion": "torneo_probabilistico", "tournament_threshold": 0.75 }
+        },
+        {
+          "id": "boltzmann",
+          "name": "Boltzmann",
+          "overrides": { "seleccion": "boltzmann", "temperature": 0.0001 }
+        }
+      ],
+      "outputs": {
+        "plots": ["fitness_maximo", "diversidad", "tiempo_generacion"],
+        "save_csv": true,
+        "save_summary": true,
+        "save_images": false,
+        "save_gif": false
+      }
+    },
+    {
+      "id": "full_03_cruza",
+      "name": "Evolución - Cruza",
+      "description": "Comparación evolutiva de los métodos de cruza",
+      "enabled": true,
+      "type": "full",
+      "base_overrides": {
+        "gene_count": 100,
+        "population_size": 30,
+        "selected_count": 14,
+        "max_generations": 30,
+        "output_resolution_mult": 0.3,
+        "sesgo_color_inicial": true,
+        "tipo_sesgo_color": "bounding_box",
+        "seleccion": "torneo_deterministico",
+        "tournament_size": 3,
+        "save_every_n_generations": 0,
+        "save_best": false
+      },
+      "variants": [
+        {
+          "id": "un_punto",
+          "name": "Un Punto",
+          "overrides": { "cruza": "un_punto" }
+        },
+        {
+          "id": "dos_puntos",
+          "name": "Dos Puntos",
+          "overrides": { "cruza": "dos_puntos" }
+        },
+        {
+          "id": "anular",
+          "name": "Anular",
+          "overrides": { "cruza": "anular" }
+        },
+        {
+          "id": "uniforme",
+          "name": "Uniforme",
+          "overrides": { "cruza": "uniforme", "uniform_crossover_P": 0.5 }
+        }
+      ],
+      "outputs": {
+        "plots": ["fitness_maximo", "diversidad"],
+        "save_csv": true,
+        "save_summary": true,
+        "save_images": false,
+        "save_gif": false
+      }
+    },
+    {
+      "id": "full_04_mutacion",
+      "name": "Evolución - Mutación",
+      "description": "Comparación evolutiva de los métodos de mutación",
+      "enabled": true,
+      "type": "full",
+      "base_overrides": {
+        "gene_count": 100,
+        "population_size": 30,
+        "selected_count": 14,
+        "max_generations": 30,
+        "output_resolution_mult": 0.3,
+        "sesgo_color_inicial": true,
+        "tipo_sesgo_color": "bounding_box",
+        "seleccion": "torneo_deterministico",
+        "tournament_size": 3,
+        "cruza": "dos_puntos",
+        "save_every_n_generations": 0,
+        "save_best": false
+      },
+      "variants": [
+        {
+          "id": "gen",
+          "name": "Gen",
+          "overrides": { "mutacion": "gen", "extra_gene_Pm": 0.5 }
+        },
+        {
+          "id": "multigen_5",
+          "name": "MultiGen (k=5)",
+          "overrides": { "mutacion": "multigen", "max_genes_to_mutate": 5, "extra_gene_Pm": 0.2 }
+        },
+        {
+          "id": "uniforme",
+          "name": "Uniforme",
+          "overrides": { "mutacion": "uniforme", "extra_gene_Pm": 0.1 }
+        },
+        {
+          "id": "no_uniforme",
+          "name": "No Uniforme",
+          "overrides": { "mutacion": "no_uniforme", "extra_gene_Pm": 0.05 }
+        }
+      ],
+      "outputs": {
+        "plots": ["fitness_maximo", "diversidad"],
+        "save_csv": true,
+        "save_summary": true,
+        "save_images": false,
+        "save_gif": false
+      }
+    },
+    {
+      "id": "full_05_supervivencia",
+      "name": "Evolución - Supervivencia",
+      "description": "Comparación evolutiva de supervivencia aditiva vs exclusiva",
+      "enabled": true,
+      "type": "full",
+      "base_overrides": {
+        "gene_count": 100,
+        "population_size": 30,
+        "max_generations": 30,
+        "output_resolution_mult": 0.3,
+        "sesgo_color_inicial": true,
+        "tipo_sesgo_color": "bounding_box",
+        "seleccion": "torneo_deterministico",
+        "tournament_size": 3,
+        "cruza": "dos_puntos",
+        "mutacion": "multigen",
+        "max_genes_to_mutate": 5,
+        "save_every_n_generations": 0,
+        "save_best": false
+      },
+      "variants": [
+        {
+          "id": "aditiva_k10",
+          "name": "Aditiva (K=10)",
+          "overrides": { "supervivencia": "aditiva", "selected_count": 10 }
+        },
+        {
+          "id": "exclusiva_k10",
+          "name": "Exclusiva (K=10)",
+          "overrides": { "supervivencia": "exclusiva", "selected_count": 10 }
+        },
+        {
+          "id": "aditiva_k30",
+          "name": "Aditiva (K=30)",
+          "overrides": { "supervivencia": "aditiva", "selected_count": 30 }
+        },
+        {
+          "id": "exclusiva_k30",
+          "name": "Exclusiva (K=30)",
+          "overrides": { "supervivencia": "exclusiva", "selected_count": 30 }
+        }
+      ],
+      "outputs": {
+        "plots": ["fitness_maximo", "fitness_promedio", "diversidad"],
+        "save_csv": true,
+        "save_summary": true,
+        "save_images": false,
+        "save_gif": false
+      }
+    },
+    {
+      "id": "full_06_figuras",
+      "name": "Evolución - Figuras",
+      "description": "Comparación evolutiva de figuras a 100 genes",
+      "enabled": true,
+      "type": "full",
+      "base_overrides": {
+        "gene_count": 100,
+        "population_size": 30,
+        "selected_count": 14,
+        "max_generations": 30,
+        "output_resolution_mult": 0.3,
+        "sesgo_color_inicial": true,
+        "tipo_sesgo_color": "bounding_box",
+        "seleccion": "torneo_deterministico",
+        "tournament_size": 3,
+        "cruza": "dos_puntos",
+        "mutacion": "multigen",
+        "max_genes_to_mutate": 5,
+        "supervivencia": "aditiva",
+        "save_every_n_generations": 0,
+        "save_best": false
+      },
+      "variants": [
+        {
+          "id": "triangulo",
+          "name": "Triángulo",
+          "overrides": { "gene_type": "triangle" }
+        },
+        {
+          "id": "cuadrilatero",
+          "name": "Cuadrilátero",
+          "overrides": { "gene_type": "quad" }
+        },
+        {
+          "id": "pentagono",
+          "name": "Pentágono",
+          "overrides": { "gene_type": "pentagon" }
+        },
+        {
+          "id": "ovalo",
+          "name": "Óvalo",
+          "overrides": { "gene_type": "oval" }
+        }
+      ],
+      "outputs": {
+        "plots": ["fitness_maximo", "tiempo_generacion"],
+        "save_csv": true,
+        "save_summary": true,
+        "save_images": false,
+        "save_gif": false
+      }
+    }
+  ]
+}

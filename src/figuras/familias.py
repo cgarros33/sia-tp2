@@ -40,15 +40,29 @@ class Poligono(Figura):
         """Devuelve un polígono nuevo con cada parámetro mutado por un delta y recortado a su rango."""
         minimos, maximos = self._limites(config, ancho, alto)
         cantidad = 2 * self.CANTIDAD_VERTICES
-        muta = azar.random(cantidad + len(CANALES_DE_COLOR)) < config["intra_gene_Pm"]
+        total = cantidad + len(CANALES_DE_COLOR)
+
+        aleatorios = azar.random(2 * total)
+        muta = aleatorios[:total] < config["intra_gene_Pm"]
+        if not np.any(muta):
+            return self
 
         delta_coord = config["max_coord_delta"]
-        puntos = np.asarray(self._puntos) + azar.uniform(
-            -delta_coord, delta_coord, cantidad
-        ) * muta[:cantidad]
+        deltas_coord = (
+            aleatorios[total : total + cantidad] * (2 * delta_coord)
+        ) - delta_coord
+        puntos = np.asarray(self._puntos) + deltas_coord * muta[:cantidad]
         puntos = np.clip(puntos, minimos[:cantidad], maximos[:cantidad])
 
-        color = _color_mutado(azar, self._color, config, muta[cantidad:])
+        delta_color = int(config["max_color_delta"])
+        deltas_color = (
+            np.floor(
+                aleatorios[total + cantidad :] * (2 * delta_color + 1)
+            ).astype(int)
+            - delta_color
+        )
+        color = np.asarray(self._color) + deltas_color * muta[cantidad:]
+        color = tuple(np.clip(color, 0, COLOR_MAXIMO).tolist())
 
         return type(self)(tuple(puntos.tolist()), color)
 
@@ -56,10 +70,10 @@ class Poligono(Figura):
         """Devuelve un polígono nuevo con los mismos parámetros."""
         return type(self)(self._puntos, self._color)
 
-    def dibujar(self, destino, recursos):
+    def dibujar(self, destino, recursos, pincel=None):
         """Pinta el polígono relleno sobre el destino, mezclando su alfa con lo ya dibujado."""
-        # Pillow solo mezcla el alfa si el destino está en RGB y el pincel en RGBA.
-        pincel = ImageDraw.Draw(destino, "RGBA")
+        if pincel is None:
+            pincel = ImageDraw.Draw(destino, "RGBA")
         pincel.polygon(self._puntos, fill=self._color)
 
     def parametros(self):
@@ -135,7 +149,12 @@ class FiguraElipsoidal(Figura):
         """Devuelve una figura nueva con la geometría recortada, la rotación envuelta y el color recortado."""
         minimos, maximos = self._limites(config, ancho, alto)
         cantidad = len(self.NOMBRES_GEOMETRIA)
-        muta = azar.random(cantidad + len(CANALES_DE_COLOR)) < config["intra_gene_Pm"]
+        total = cantidad + len(CANALES_DE_COLOR)
+
+        aleatorios = azar.random(2 * total)
+        muta = aleatorios[:total] < config["intra_gene_Pm"]
+        if not np.any(muta):
+            return self
 
         deltas = np.array(
             (
@@ -146,9 +165,8 @@ class FiguraElipsoidal(Figura):
                 config["max_rotation_delta"],
             )
         )
-        geometria = np.asarray(self._geometria) + azar.uniform(
-            -1.0, 1.0, cantidad
-        ) * deltas * muta[:cantidad]
+        deltas_geom = (aleatorios[total : total + cantidad] * 2.0 - 1.0) * deltas
+        geometria = np.asarray(self._geometria) + deltas_geom * muta[:cantidad]
         geometria[:-1] = np.clip(
             geometria[:-1], minimos[: cantidad - 1], maximos[: cantidad - 1]
         )
@@ -156,7 +174,15 @@ class FiguraElipsoidal(Figura):
         # una rotación apenas negativa quedaría fuera de rango sin fallar.
         geometria[-1] %= 1.0
 
-        color = _color_mutado(azar, self._color, config, muta[cantidad:])
+        delta_color = int(config["max_color_delta"])
+        deltas_color = (
+            np.floor(
+                aleatorios[total + cantidad :] * (2 * delta_color + 1)
+            ).astype(int)
+            - delta_color
+        )
+        color = np.asarray(self._color) + deltas_color * muta[cantidad:]
+        color = tuple(np.clip(color, 0, COLOR_MAXIMO).tolist())
 
         return type(self)(tuple(geometria.tolist()), color)
 
@@ -218,13 +244,6 @@ class FiguraElipsoidal(Figura):
         destino.paste(rotada, posicion, rotada)
 
 
-def _color_mutado(azar, color, config, muta):
-    """Suma un delta entero simétrico a los canales que mutan y recorta el resultado a [0, 255]."""
-    delta_maximo = int(config["max_color_delta"])
-    valores = np.asarray(color) + azar.integers(
-        -delta_maximo, delta_maximo + 1, len(CANALES_DE_COLOR)
-    ) * muta
-    return tuple(np.clip(valores, 0, COLOR_MAXIMO).tolist())
 
 
 def _a_entero(valor):
