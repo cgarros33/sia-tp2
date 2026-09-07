@@ -114,14 +114,55 @@ def resolver_semilla(config_analisis, opciones_cli):
     return int(config_analisis.get("default_seed", 33333333))
 
 
+PALETA_GRAFICOS = (
+    "#3182ce",
+    "#dd6b20",
+    "#38a169",
+    "#805ad5",
+    "#d53f8c",
+    "#2c7a7b",
+    "#b7791f",
+)
+
+
 def configurar_estilo_graficos():
-    """Aplica parámetros globales de matplotlib para obtener figuras sobrias y legibles."""
-    plt.rcParams["font.sans-serif"] = "DejaVu Sans"
-    plt.rcParams["axes.edgecolor"] = "#333333"
-    plt.rcParams["axes.linewidth"] = 0.8
-    plt.rcParams["grid.color"] = "#cccccc"
-    plt.rcParams["grid.linestyle"] = "--"
-    plt.rcParams["grid.linewidth"] = 0.5
+    """Aplica los parámetros de matplotlib que hacen legible cada figura dentro de una diapositiva."""
+    plt.rcParams.update(
+        {
+            "figure.facecolor": "white",
+            "axes.facecolor": "white",
+            "font.sans-serif": ["DejaVu Sans"],
+            "font.size": 13,
+            # El título de la figura queda chico y gris porque la diapositiva ya
+            # pone el suyo arriba de la tarjeta: si compiten, se leen como repetidos.
+            "axes.titlesize": 11,
+            "axes.titleweight": "normal",
+            "axes.titlecolor": "#718096",
+            "axes.titlelocation": "left",
+            "axes.titlepad": 10,
+            "axes.labelsize": 13,
+            "axes.labelcolor": "#2d3748",
+            "axes.edgecolor": "#cbd5e0",
+            "axes.linewidth": 1.0,
+            "axes.spines.top": False,
+            "axes.spines.right": False,
+            "axes.prop_cycle": plt.cycler(color=PALETA_GRAFICOS),
+            "axes.axisbelow": True,
+            "grid.color": "#e2e8f0",
+            "grid.linestyle": "-",
+            "grid.linewidth": 0.8,
+            "xtick.color": "#4a5568",
+            "ytick.color": "#4a5568",
+            "xtick.labelsize": 12,
+            "ytick.labelsize": 12,
+            "xtick.major.size": 0,
+            "ytick.major.size": 0,
+            "lines.linewidth": 2.4,
+            "legend.fontsize": 12,
+            "legend.frameon": False,
+            "figure.autolayout": True,
+        }
+    )
 
 
 def ejecutar_benchmark_seleccion(experimento, dir_salida, semilla, config_base):
@@ -168,11 +209,11 @@ def ejecutar_benchmark_seleccion(experimento, dir_salida, semilla, config_base):
     fig, ax = plt.subplots(figsize=(8, 5))
     for vid, datos in conteos.items():
         ax.plot(range(poblacion_tamano), datos["frecuencias"], label=datos["nombre"], linewidth=1.5)
-    ax.set_title("Frecuencia de seleccion vs Ranking")
+    ax.set_title("Frecuencia de selección vs ranking")
     ax.set_xlabel("Ranking del individuo (0 = peor, 99 = mejor)")
-    ax.set_ylabel("Frecuencia relativa de seleccion")
+    ax.set_ylabel("Frecuencia relativa de selección")
     ax.grid(True, alpha=0.3)
-    ax.legend(frameon=True)
+    ax.legend(frameon=False)
     fig.savefig(dir_salida / "frecuencia_seleccion.png", dpi=300, bbox_inches="tight")
     plt.close(fig)
 
@@ -225,7 +266,10 @@ def ejecutar_benchmark_cruza(experimento, dir_salida, semilla, config_base):
     fig, ax = plt.subplots(figsize=(8, 5))
     nombres = [res["nombre"] for res in resultados.values()]
     datos = [res["datos"] for res in resultados.values()]
-    ax.boxplot(datos, tick_labels=nombres, patch_artist=True, boxprops=dict(facecolor="#d0e1f9"))
+    ax.boxplot(datos, tick_labels=nombres, patch_artist=True, boxprops=dict(facecolor="#bee3f8", edgecolor="#2c5282"),
+        medianprops=dict(color="#2c5282", linewidth=2),
+        whiskerprops=dict(color="#718096"),
+        capprops=dict(color="#718096"))
     ax.set_title("Cantidad de genes intercambiados por cruza")
     ax.set_ylabel("Cantidad de genes (de 100)")
     ax.grid(True, alpha=0.3)
@@ -236,10 +280,10 @@ def ejecutar_benchmark_cruza(experimento, dir_salida, semilla, config_base):
     for vid, vals in frecuencias_locus.items():
         ax.plot(range(gene_count), vals, label=resultados[vid]["nombre"], linewidth=1.5)
     ax.set_title("Frecuencia de intercambio por locus")
-    ax.set_xlabel("Posicion del locus (0 a 99)")
+    ax.set_xlabel("Posición del locus (0 a 99)")
     ax.set_ylabel("Probabilidad de intercambio")
     ax.grid(True, alpha=0.3)
-    ax.legend(frameon=True)
+    ax.legend(frameon=False)
     fig.savefig(dir_salida / "frecuencia_locus.png", dpi=300, bbox_inches="tight")
     plt.close(fig)
 
@@ -308,8 +352,8 @@ def ejecutar_benchmark_mutacion(experimento, dir_salida, semilla, config_base):
         promedios,
         yerr=[desvios_inferiores, desvios_superiores],
         capsize=4,
-        color="#4b86b4",
-        edgecolor="#2a4d69",
+        color=PALETA_GRAFICOS[0],
+        edgecolor="none",
     )
     ax.set_xticks(x)
     ax.set_xticklabels(nombres, rotation=15, ha="right")
@@ -389,10 +433,10 @@ def ejecutar_benchmark_supervivencia(experimento, dir_salida, semilla, config_ba
     nombres = [res["nombre"] for res in resultados.values()]
     promedios = [res["promedio_padres"] for res in resultados.values()]
     x = np.arange(len(nombres))
-    ax.bar(x, promedios, color="#57bc90", edgecolor="#015249")
+    ax.bar(x, promedios, color=PALETA_GRAFICOS[2], edgecolor="none")
     ax.set_xticks(x)
     ax.set_xticklabels(nombres, rotation=15, ha="right")
-    ax.set_title("Padres sobrevivientes en la nueva generacion")
+    ax.set_title("Padres sobrevivientes en la nueva generación")
     ax.set_ylabel("Cantidad de padres (de 100)")
     ax.set_ylim(bottom=0)
     ax.grid(True, alpha=0.3, axis="y")
@@ -464,8 +508,8 @@ def ejecutar_benchmark_render(experimento, dir_salida, semilla, config_base):
         medios,
         yerr=[desvios_inf, desvios],
         capsize=4,
-        color="#e0876a",
-        edgecolor="#d9534f",
+        color=PALETA_GRAFICOS[1],
+        edgecolor="none",
     )
     ax.set_xticks(x)
     ax.set_xticklabels(nombres)
@@ -557,11 +601,11 @@ def generar_graficos_completos(resultados_variantes, dir_salida, outputs):
             gens = [m["generacion"] for m in metricas]
             fit_max = [m["fitness_maximo"] for m in metricas]
             ax.plot(gens, fit_max, label=datos["nombre"], linewidth=1.5)
-        ax.set_title("Fitness maximo vs Generacion")
-        ax.set_xlabel("Generacion")
-        ax.set_ylabel("Fitness maximo")
+        ax.set_title("Fitness máximo por generación")
+        ax.set_xlabel("Generación")
+        ax.set_ylabel("Fitness máximo")
         ax.grid(True, alpha=0.3)
-        ax.legend(frameon=True)
+        ax.legend(frameon=False)
         fig.savefig(dir_salida / "fitness_maximo.png", dpi=300, bbox_inches="tight")
         plt.close(fig)
 
@@ -572,11 +616,11 @@ def generar_graficos_completos(resultados_variantes, dir_salida, outputs):
             gens = [m["generacion"] for m in metricas]
             fit_prom = [m["fitness_promedio"] for m in metricas]
             ax.plot(gens, fit_prom, label=datos["nombre"], linewidth=1.5)
-        ax.set_title("Fitness promedio vs Generacion")
-        ax.set_xlabel("Generacion")
+        ax.set_title("Fitness promedio por generación")
+        ax.set_xlabel("Generación")
         ax.set_ylabel("Fitness promedio")
         ax.grid(True, alpha=0.3)
-        ax.legend(frameon=True)
+        ax.legend(frameon=False)
         fig.savefig(dir_salida / "fitness_promedio.png", dpi=300, bbox_inches="tight")
         plt.close(fig)
 
@@ -587,11 +631,11 @@ def generar_graficos_completos(resultados_variantes, dir_salida, outputs):
             gens = [m["generacion"] for m in metricas]
             div = [m["diversidad"] for m in metricas]
             ax.plot(gens, div, label=datos["nombre"], linewidth=1.5)
-        ax.set_title("Diversidad genetica vs Generacion")
-        ax.set_xlabel("Generacion")
+        ax.set_title("Diversidad genética por generación")
+        ax.set_xlabel("Generación")
         ax.set_ylabel("Diversidad normalizada")
         ax.grid(True, alpha=0.3)
-        ax.legend(frameon=True)
+        ax.legend(frameon=False)
         fig.savefig(dir_salida / "diversidad.png", dpi=300, bbox_inches="tight")
         plt.close(fig)
 
@@ -602,11 +646,11 @@ def generar_graficos_completos(resultados_variantes, dir_salida, outputs):
             gens = [m["generacion"] for m in metricas]
             tiempos = [m["tiempo_generacion"] for m in metricas]
             ax.plot(gens, tiempos, label=datos["nombre"], linewidth=1.2, alpha=0.8)
-        ax.set_title("Tiempo por generacion")
-        ax.set_xlabel("Generacion")
+        ax.set_title("Tiempo por generación")
+        ax.set_xlabel("Generación")
         ax.set_ylabel("Tiempo (s)")
         ax.grid(True, alpha=0.3)
-        ax.legend(frameon=True)
+        ax.legend(frameon=False)
         fig.savefig(dir_salida / "tiempo_generacion.png", dpi=300, bbox_inches="tight")
         plt.close(fig)
 
@@ -617,11 +661,11 @@ def generar_graficos_completos(resultados_variantes, dir_salida, outputs):
             tiempos_acumulados = np.cumsum([m["tiempo_generacion"] for m in metricas])
             fit_max = [m["fitness_maximo"] for m in metricas]
             ax.plot(tiempos_acumulados, fit_max, label=datos["nombre"], linewidth=1.5)
-        ax.set_title("Fitness maximo vs Tiempo acumulado")
+        ax.set_title("Fitness máximo vs tiempo acumulado")
         ax.set_xlabel("Tiempo transcurrido (s)")
-        ax.set_ylabel("Fitness maximo")
+        ax.set_ylabel("Fitness máximo")
         ax.grid(True, alpha=0.3)
-        ax.legend(frameon=True)
+        ax.legend(frameon=False)
         fig.savefig(dir_salida / "fitness_vs_tiempo.png", dpi=300, bbox_inches="tight")
         plt.close(fig)
 
