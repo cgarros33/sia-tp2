@@ -20,6 +20,12 @@ from src.renderizador import (
 
 def main():
     """Coordina la lectura de argumentos, ejecución del motor y persistencia de resultados."""
+    # La barra de progreso imprime caracteres que la codificación ANSI de Windows no
+    # tiene. Sin esto la corrida muere cuando la salida no va a una consola, que es
+    # exactamente como la invoca analyze.py para cada variante.
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
     try:
         config_path, result_path, img_path, save_all, overrides = parsear_args(
             sys.argv[1:]
