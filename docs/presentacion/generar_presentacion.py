@@ -1,11 +1,14 @@
 """Generador automatizado de la presentación PowerPoint (16:9) para Google Slides del TP2 SIA."""
 
+import io
 import os
 from pathlib import Path
+
+from PIL import Image, ImageFont
 from pptx import Presentation
 from pptx.dml.color import RGBColor
-from pptx.enum.shapes import MSO_SHAPE
-from pptx.enum.text import PP_ALIGN
+from pptx.enum.shapes import MSO_SHAPE, MSO_SHAPE_TYPE
+from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Inches, Pt
 
 COLOR_FONDO = RGBColor(248, 249, 250)
@@ -17,6 +20,14 @@ COLOR_TEXTO = RGBColor(45, 55, 72)
 COLOR_ACENTO = RGBColor(49, 130, 206)
 COLOR_VERDE = RGBColor(56, 161, 105)
 COLOR_TAG_BG = RGBColor(235, 248, 255)
+COLOR_PIE = RGBColor(160, 174, 192)
+
+ANCHO_SLIDE = Inches(13.333)
+ALTO_SLIDE = Inches(7.5)
+BANDA_SUPERIOR = Inches(1.9)
+BANDA_INFERIOR = Inches(6.95)
+UMBRAL_ENCABEZADO = Inches(1.75)
+RELLENO_TARJETA = Inches(0.28)
 
 
 def crear_slide_base(prs, titulo, subtitulo=None):
@@ -24,14 +35,23 @@ def crear_slide_base(prs, titulo, subtitulo=None):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
 
     fondo = slide.shapes.add_shape(
-        MSO_SHAPE.RECTANGLE, Inches(0), Inches(0), Inches(13.333), Inches(7.5)
+        MSO_SHAPE.RECTANGLE, Inches(0), Inches(0), ANCHO_SLIDE, ALTO_SLIDE
     )
     fondo.fill.solid()
     fondo.fill.fore_color.rgb = COLOR_FONDO
     fondo.line.fill.background()
+    fondo.shadow.inherit = False
+
+    acento = slide.shapes.add_shape(
+        MSO_SHAPE.RECTANGLE, Inches(0.8), Inches(0.55), Inches(0.07), Inches(0.62)
+    )
+    acento.fill.solid()
+    acento.fill.fore_color.rgb = COLOR_ACENTO
+    acento.line.fill.background()
+    acento.shadow.inherit = False
 
     caja_header = slide.shapes.add_textbox(
-        Inches(0.8), Inches(0.5), Inches(11.733), Inches(1.1)
+        Inches(1.05), Inches(0.5), Inches(11.5), Inches(1.1)
     )
     tf = caja_header.text_frame
     tf.word_wrap = True
@@ -53,11 +73,12 @@ def crear_slide_base(prs, titulo, subtitulo=None):
         p_sub.space_before = Pt(4)
 
     linea = slide.shapes.add_shape(
-        MSO_SHAPE.RECTANGLE, Inches(0.8), Inches(1.6), Inches(11.733), Inches(0.02)
+        MSO_SHAPE.RECTANGLE, Inches(0.8), Inches(1.62), Inches(11.733), Inches(0.014)
     )
     linea.fill.solid()
     linea.fill.fore_color.rgb = COLOR_BORDE
     linea.line.fill.background()
+    linea.shadow.inherit = False
 
     return slide
 
@@ -68,12 +89,11 @@ def agregar_card(slide, left, top, width, height, color_bg=COLOR_CARD, color_bor
     card.fill.solid()
     card.fill.fore_color.rgb = color_bg
     card.line.color.rgb = color_borde
-    card.line.width = Pt(1)
+    card.line.width = Pt(0.75)
+    card.adjustments[0] = 0.04
+    card.shadow.inherit = False
     return card
 
-
-import io
-from PIL import Image
 
 def agregar_imagen_segura(slide, ruta, left, top, width=None, height=None):
     """Inserta una imagen o GIF si existe en el disco, convirtiendo WebP a PNG si es necesario."""
@@ -108,14 +128,181 @@ def agregar_imagen_segura(slide, ruta, left, top, width=None, height=None):
 
 
 def agregar_bullet_points(tf, puntos, font_size=13):
-    """Agrega una lista de viñetas con formato consistente."""
+    """Agrega una lista de viñetas con sangría francesa, para que la segunda línea no arranque bajo el punto."""
+    sangria = Pt(font_size * 1.1)
     for idx, punto in enumerate(puntos):
         p = tf.add_paragraph() if idx > 0 or tf.paragraphs[0].text else tf.paragraphs[0]
-        p.text = f"• {punto}"
+        p.text = f"•  {punto}"
         p.font.name = "Arial"
         p.font.size = Pt(font_size)
         p.font.color.rgb = COLOR_TEXTO
-        p.space_before = Pt(8)
+        p.space_before = Pt(9)
+        p.line_spacing = 1.15
+        propiedades = p._p.get_or_add_pPr()
+        propiedades.set("marL", str(int(sangria)))
+        propiedades.set("indent", str(-int(sangria)))
+
+
+def _es_fondo(forma):
+    """Indica si la forma es el rectángulo de fondo que cubre la diapositiva entera."""
+    return forma.width >= ANCHO_SLIDE and forma.height >= ALTO_SLIDE
+
+
+def _es_tarjeta(forma):
+    """Indica si la forma es una de las tarjetas contenedoras."""
+    return (
+        forma.shape_type == MSO_SHAPE_TYPE.AUTO_SHAPE
+        and forma.auto_shape_type == MSO_SHAPE.ROUNDED_RECTANGLE
+    )
+
+
+def _centro_dentro(forma, tarjeta):
+    """Indica si el centro de la forma cae dentro de la tarjeta."""
+    centro_x = forma.left + forma.width // 2
+    centro_y = forma.top + forma.height // 2
+    return (
+        tarjeta.left <= centro_x <= tarjeta.left + tarjeta.width
+        and tarjeta.top <= centro_y <= tarjeta.top + tarjeta.height
+    )
+
+
+def _fuente(tamano_pt):
+    """Devuelve la fuente con la que se mide el texto, o None si no está disponible."""
+    try:
+        return ImageFont.truetype("arial.ttf", max(1, int(round(tamano_pt * 96 / 72))))
+    except OSError:
+        return None
+
+
+def _lineas_que_ocupa(texto, fuente, ancho_px):
+    """Cuenta en cuántas líneas cae el texto dentro del ancho dado."""
+    if not texto.strip():
+        return 1
+    lineas = 1
+    actual = ""
+    for palabra in texto.split():
+        tentativa = f"{actual} {palabra}".strip()
+        if not actual or fuente.getlength(tentativa) <= ancho_px:
+            actual = tentativa
+        else:
+            lineas += 1
+            actual = palabra
+    return lineas
+
+
+def _alto_del_texto(forma):
+    """Estima cuánto ocupa el texto de una caja, que no es lo mismo que la altura con la que se la declaró."""
+    marco = forma.text_frame
+    ancho_px = int((forma.width - marco.margin_left - marco.margin_right) / 914400 * 96)
+    if ancho_px <= 0:
+        return None
+    alto_pt = (marco.margin_top + marco.margin_bottom) / 12700
+    for parrafo in marco.paragraphs:
+        tamano = parrafo.font.size or Pt(13)
+        fuente = _fuente(tamano.pt)
+        if fuente is None:
+            return None
+        lineas = _lineas_que_ocupa(parrafo.text, fuente, ancho_px)
+        alto_pt += lineas * tamano.pt * 1.2 * (parrafo.line_spacing or 1.0)
+        if parrafo.space_before is not None:
+            alto_pt += parrafo.space_before.pt
+        if parrafo.space_after is not None:
+            alto_pt += parrafo.space_after.pt
+    # El 6% cubre la diferencia entre la medida de la fuente y lo que termina
+    # componiendo PowerPoint: si queda corto, la tarjeta corta el texto.
+    return int(alto_pt * 12700 * 1.06)
+
+
+def _alto_efectivo(forma):
+    """Devuelve la altura que la forma ocupa de verdad, midiendo el texto cuando lo tiene."""
+    if forma.has_text_frame and forma.text_frame.text.strip():
+        estimado = _alto_del_texto(forma)
+        if estimado:
+            return estimado
+    return forma.height
+
+
+def _ajustar_tarjetas(contenido):
+    """Recorta cada tarjeta hasta la altura de lo que contiene y empareja las de una misma fila."""
+    tarjetas = [forma for forma in contenido if _es_tarjeta(forma)]
+    for tarjeta in tarjetas:
+        adentro = [
+            forma
+            for forma in contenido
+            if forma is not tarjeta and _centro_dentro(forma, tarjeta)
+        ]
+        if not adentro:
+            continue
+        base = max(forma.top + _alto_efectivo(forma) for forma in adentro)
+        tarjeta.height = base - tarjeta.top + RELLENO_TARJETA
+
+    filas = {}
+    for tarjeta in tarjetas:
+        filas.setdefault(tarjeta.top, []).append(tarjeta)
+    for fila in filas.values():
+        alto = max(tarjeta.height for tarjeta in fila)
+        for tarjeta in fila:
+            tarjeta.height = alto
+
+
+def _centrar_bloque(contenido):
+    """Baja el bloque de contenido para que quede centrado en la banda libre de la diapositiva."""
+    if not contenido:
+        return
+    arriba = min(forma.top for forma in contenido)
+    abajo = max(forma.top + _alto_efectivo(forma) for forma in contenido)
+    desplazamiento = ((BANDA_SUPERIOR + BANDA_INFERIOR) - (arriba + abajo)) // 2
+    if desplazamiento <= 0:
+        return
+    for forma in contenido:
+        forma.top += desplazamiento
+
+
+def _agregar_pie(slide, numero, total):
+    """Numera la diapositiva y deja la referencia del trabajo al pie."""
+    caja = slide.shapes.add_textbox(
+        Inches(0.8), Inches(6.95), Inches(11.733), Inches(0.35)
+    )
+    tf = caja.text_frame
+    tf.margin_left = tf.margin_top = tf.margin_right = tf.margin_bottom = 0
+    parrafo = tf.paragraphs[0]
+    parrafo.text = f"TP2 · Sistemas de Inteligencia Artificial · ITBA          {numero} / {total}"
+    parrafo.font.name = "Arial"
+    parrafo.font.size = Pt(10)
+    parrafo.font.color.rgb = COLOR_PIE
+    parrafo.alignment = PP_ALIGN.RIGHT
+
+
+def _centrar_portada(slide):
+    """Centra verticalmente el texto de una diapositiva a sangre que solo tiene texto."""
+    formas = [forma for forma in slide.shapes if not _es_fondo(forma)]
+    if not formas or not all(forma.has_text_frame for forma in formas):
+        return
+    for forma in formas:
+        forma.top = Inches(0)
+        forma.height = ALTO_SLIDE
+        forma.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+
+
+def ajustar_composicion(prs):
+    """Ajusta cada diapositiva antes de guardar: tarjetas a la medida de su contenido y bloque centrado."""
+    total = len(prs.slides._sldIdLst)
+    for numero, slide in enumerate(prs.slides, start=1):
+        formas = list(slide.shapes)
+        contenido = [
+            forma
+            for forma in formas
+            if not _es_fondo(forma) and forma.top >= UMBRAL_ENCABEZADO
+        ]
+        tiene_encabezado = any(
+            not _es_fondo(forma) and forma.top < UMBRAL_ENCABEZADO for forma in formas
+        )
+        if not tiene_encabezado:
+            _centrar_portada(slide)
+            continue
+        _ajustar_tarjetas(contenido)
+        _centrar_bloque(contenido)
+        _agregar_pie(slide, numero, total)
 
 
 def crear_presentacion(ruta_salida="docs/presentacion/presentacion_tp2.pptx"):
@@ -134,7 +321,19 @@ def crear_presentacion(ruta_salida="docs/presentacion/presentacion_tp2.pptx"):
     fondo1.fill.fore_color.rgb = COLOR_TITULO
     fondo1.line.fill.background()
 
-    caja_tit1 = slide1.shapes.add_textbox(Inches(1.2), Inches(2.2), Inches(11), Inches(3.2))
+    barra1 = slide1.shapes.add_shape(
+        MSO_SHAPE.RECTANGLE, Inches(1.2), Inches(2.55), Inches(1.4), Inches(0.075)
+    )
+    barra1.fill.solid()
+    barra1.fill.fore_color.rgb = COLOR_ACENTO
+    barra1.line.fill.background()
+    barra1.shadow.inherit = False
+
+    agregar_imagen_segura(
+        slide1, root / "resources/bron500.png", Inches(8.6), Inches(2.77), width=Inches(3.5)
+    )
+
+    caja_tit1 = slide1.shapes.add_textbox(Inches(1.2), Inches(2.75), Inches(7.0), Inches(3.0))
     tf1 = caja_tit1.text_frame
     tf1.word_wrap = True
     p = tf1.paragraphs[0]
@@ -192,7 +391,7 @@ def crear_presentacion(ruta_salida="docs/presentacion/presentacion_tp2.pptx"):
     textos3 = [
         ["Vector de 100 figuras (genes).", "Cada gen codifica coordenadas (x, y), rotación/radios y RGBA de 8 bits.", "El locus fija el orden de dibujado."],
         ["Imagen rasterizada sobre fondo opaco fijo.", "Composición de capas translúcidas (alpha blending).", "Caché de fitness: solo se re-renderiza si el individuo mutó."],
-        ["Distancia euclídea normalizada respecto a la imagen objetivo píxel a píxel.", "Escala en orden 1e-4 a 1e-3.", "A mayor aptitud, mayor fidelidad visual."]
+        ["1 / (1 + error cuadrático medio) contra la imagen objetivo, sobre los tres canales de color.", "Estrictamente positiva: la ruleta y Boltzmann la usan como peso.", "Escala en orden 1e-4 a 1e-3. A mayor aptitud, mayor fidelidad visual."]
     ]
     for i in range(3):
         x = Inches(0.8 + i * 4.0)
@@ -838,6 +1037,8 @@ def crear_presentacion(ruta_salida="docs/presentacion/presentacion_tp2.pptx"):
     p_fin2.font.color.rgb = RGBColor(190, 227, 248)
     p_fin2.alignment = PP_ALIGN.CENTER
     p_fin2.space_before = Pt(14)
+
+    ajustar_composicion(prs)
 
     Path(ruta_salida).parent.mkdir(parents=True, exist_ok=True)
     prs.save(ruta_salida)
