@@ -269,23 +269,24 @@ recursos bajo la clave `overlay`. Si cada gen leyera el disco, una generación d
 cien individuos con cien genes haría diez mil lecturas.
 
 **`dibujar`.** Toma el overlay de los recursos, lo reescala al doble de cada
-radio, lo multiplica canal por canal por el color de la figura y después lo rota
-y lo compone igual que el óvalo. Esa multiplicación hace las dos cosas a la vez:
-el color tiñe la imagen y el alfa de la figura multiplica al alfa propio del PNG,
-así que un PNG con zonas transparentes las conserva. Se hace con una
-multiplicación de imágenes de Pillow, que corre en C, y no píxel por píxel.
+radio, lo mezcla con el color de la figura, y después lo rota y lo compone igual
+que el óvalo. El color y la transparencia se aplican por separado: el color se
+mezcla con la imagen en un 45 % y el alfa de la figura multiplica al alfa propio
+del PNG, así que un PNG con zonas transparentes las conserva. Las dos operaciones
+son de Pillow y corren en C, no píxel por píxel.
 
-**El overlay tiene que llegar en modo RGBA.** La multiplicación exige que las dos
-imágenes tengan el mismo modo y el mismo tamaño; si la fase 02 lo carga en RGB,
-esto falla.
+**El overlay tiene que llegar en modo RGBA.** La multiplicación de los canales
+alfa exige que las dos imágenes tengan el mismo modo y el mismo tamaño; si la
+fase 02 lo carga en RGB, esto falla.
 
-**El tinte multiplicativo sólo puede oscurecer, nunca aclarar**: cada canal se
-multiplica por un valor entre 0 y 1. Como los colores nacen muestreados
-uniformemente, el factor promedio es la mitad, así que los overlays van a tender
-a salir más oscuros que la imagen original. Queda así a propósito, es lo que pide
-la consigna cuando dice que el color tiñe, pero si en la fase 12 las corridas con
-`gene_type` en `png` salen sistemáticamente oscuras, la causa es esta y no el
-motor.
+**El tinte es una mezcla y no una multiplicación**, y por eso puede tanto
+oscurecer como aclarar. La primera versión multiplicaba canal por canal, lo que
+solo podía oscurecer: como los colores nacen muestreados uniformemente, el factor
+promedio era la mitad y todos los overlays salían apagados. La mezcla al 45 %
+lleva la imagen hacia el color de la figura en vez de atenuarla, y conserva mucho
+mejor el contraste del PNG original. La proporción está fijada en
+`imagen_png.py`; el test `test_el_color_tine_el_png_como_filtro` de la fase 11 la
+verifica, así que si alguien la cambia, la suite avisa.
 
 ---
 
