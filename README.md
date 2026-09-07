@@ -7,11 +7,26 @@ Aproximación a imágenes con figuras geométricas translúcidas mediante un mot
 ## Requisitos
 
 - Python 3.11+
-- Dependencias: `numpy`, `scipy`, `pillow`
+- Para correr el motor: `numpy` y `pillow`.
 
-Instalación:
 ```bash
-pip install numpy scipy pillow
+pip install numpy pillow
+```
+
+Cada herramienta que acompaña al motor suma una dependencia propia. Ninguna hace
+falta para correr una simulación:
+
+| Para | Hace falta | Comando |
+|---|---|---|
+| Correr el motor (`main.py`) | `numpy`, `pillow` | `pip install numpy pillow` |
+| Correr los tests (`tests/`) | `pytest` | `pip install pytest` |
+| Correr los experimentos (`analyze.py`) | `matplotlib` | `pip install matplotlib` |
+| Regenerar la presentación | `python-pptx` | `pip install python-pptx` |
+
+Para instalar todo de una vez:
+
+```bash
+pip install numpy pillow pytest matplotlib python-pptx
 ```
 
 ---
@@ -103,3 +118,76 @@ Tras la corrida, el programa genera automáticamente:
 ## Interrupción de la Simulación
 
 Si se desea detener la simulación antes de que cumpla los criterios de parada, se puede presionar `Ctrl + C`. El motor atrapará la señal de forma limpia y generará todos los reportes, el GIF y la imagen del mejor individuo hasta la generación alcanzada, indicando `interrupcion_usuario` como motivo de finalización.
+
+---
+
+## Tests
+
+La suite corre entera en menos de dos segundos y no toca el disco ni depende de
+ninguna imagen del repositorio: todo lo que necesita lo genera en memoria.
+
+```bash
+python -m pytest tests -q
+```
+
+Para correr solo una parte:
+
+```bash
+python -m pytest tests/test_seleccion.py -q      # un módulo
+python -m pytest tests -q -k diversidad          # por nombre de prueba
+python -m pytest tests -v                        # con el detalle de cada prueba
+```
+
+| Archivo | Qué cubre |
+|---|---|
+| `tests/test_figuras.py` | Las cinco figuras: dominio, recorte de la mutación, copias independientes, reproducibilidad y dibujado |
+| `tests/test_fitness.py` | La aptitud: cota superior, positividad y que preserve el orden del error |
+| `tests/test_individuo.py` | El caché de aptitud y su invalidación al cambiar un gen |
+| `tests/test_poblacion.py` | La diversidad, su normalización por rango y las métricas de la generación |
+| `tests/test_seleccion.py` | Los siete métodos de selección |
+| `tests/test_cruza.py` | Los cuatro métodos de cruza |
+| `tests/test_mutacion.py` | Los cuatro métodos de mutación |
+| `tests/test_supervivencia.py` | Las dos estrategias de supervivencia |
+| `tests/test_reproducibilidad.py` | La corrida completa: misma semilla, mismas métricas, y los tres criterios de corte |
+| `tests/helpers.py` | Constructores de individuos, poblaciones y generadores de prueba |
+
+---
+
+## Experimentos y gráficos
+
+`analyze.py` corre la batería de experimentos que compara los operadores entre sí
+y deja los gráficos y los CSV en `results/analysis/`. Los experimentos se
+declaran en `analyze-conf.json`; hay una versión comentada en
+`analyze-conf.example.json`.
+
+```bash
+python analyze.py                            # los 11 experimentos, unos 3 minutos
+python analyze.py --dry-run                  # lista qué se va a correr, sin correrlo
+python analyze.py --experiment=op_02_cruza   # uno solo
+python analyze.py --type=operator            # solo los aislados, que son rápidos
+python analyze.py --output-dir=<path>        # otro destino
+python analyze.py --random-seed              # con semilla al azar en vez de la fija
+```
+
+Hay dos familias de experimentos:
+
+- **Aislados** (`op_*`): miden un operador sin correr el algoritmo completo, por
+  ejemplo con qué frecuencia cada método de selección elige a cada individuo del
+  ranking. Son cuestión de segundos.
+- **Evolutivos** (`full_*`): corren el motor de verdad para cada variante y
+  comparan las curvas de fitness, diversidad y tiempo por generación.
+
+---
+
+## Presentación
+
+`docs/presentacion/presentacion_tp2.pptx` es la presentación del trabajo, y se
+genera con:
+
+```bash
+python docs/presentacion/generar_presentacion.py
+```
+
+El generador toma los gráficos y los GIF de `results/analysis/`, así que hay que
+correr `analyze.py` antes. Si falta alguna imagen no falla: deja un recuadro
+marcando cuál no encontró.
